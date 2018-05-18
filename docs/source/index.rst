@@ -9,6 +9,10 @@ Contents
 .. toctree::
    :maxdepth: 4
 
+   Overview <overview>
+   Installation <installation>
+   Configuration <configuration>
+   Development <development>
    API <modules>
    Changelog <changes>
 

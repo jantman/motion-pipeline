@@ -41,9 +41,22 @@ from motion_pipeline.version import VERSION, PROJECT_URL
 with open('README.rst') as file:
     long_description = file.read()
 
+# These should be just the absolute minimum requiremenrs for
+# the motion_handler.py script to run.
 requires = [
     'boto3'
 ]
+
+# Requirements for everything beyond that...
+extras_require = {
+    'web': [],
+    'worker': [],
+    'imaging': []
+}
+all_req = list(set([
+    req for item in extras_require for req in extras_require[item]
+]))
+extras_require['all'] = all_req
 
 # @TODO - see: https://pypi.python.org/pypi?%3Aaction=list_classifiers
 classifiers = [
@@ -68,6 +81,7 @@ setup(
                 'video motion detection project',
     long_description=long_description,
     install_requires=requires,
+    extras_require=extras_require,
     keywords="motion video frontend detection",
     classifiers=classifiers
 )

@@ -9,39 +9,26 @@ motion-pipeline
    :alt: Project Status: WIP – Initial development is in progress, but there has not yet been a stable, usable release suitable for the public.
    :target: http://www.repostatus.org/#wip
 
-Frontend and recording management pipeline for the Motion video motion detection project
+Frontend and recording management pipeline for the Motion video motion detection project.
+
+**Docs:** `https://motion-pipeline.readthedocs.io/en/latest/ <https://motion-pipeline.readthedocs.io/en/latest/>`_
+
+Status
+------
+
+This project is **alpha** code, and is a **work in progress that may not be finished.** I am going to be doing as much as I can on this in three weeks; I'm not sure if I'll continue work on it after that. You've been warned. Sorry.
 
 Introduction
 ------------
 
-TBD.
+I have two IP cameras at home that I'd like to use for security, specifically motion-activated recording and notification of events when I'm away. The cameras (see my detailed unboxing/review of them `on my blog <https://blog.jasonantman.com/2018/05/amcrest-ip-camera-first-impressions/>`_) are 960P and 1080P, respectively. The `current options <https://blog.jasonantman.com/2018/05/linux-surveillance-camera-software-evaluation/>`_ for Free/Open Source software to do this aren't adequate for me; ZoneMinder, the de-facto standard, doesn't meet my resource constraints of being able to run on (or partially run on) a RaspberryPi 3 B+ and the other options I could find aren't mature or lack features I need.
 
-Requirements
-------------
+As a result, I'm building this. It's a project composed of multiple services and intended to handle processing data from Motion (recordings and the metadata associated with them), storing it, and providing a viewing interface and notifications/alerts. The project is intended to be modular, utilizing a storage service (S3 or the local S3-compatible `minio <https://www.minio.io/>`_), a queue (Redis) and a database (MySQL) to connect a handler that runs on the same device as ``motion`` (this could be anything from a RaspberryPi to a server), an asynchronous task worker for ingesting new data from motion, triggering notifications, and generating thumbnails, and a web frontend.
 
-* Python 3.4+ (currently tested with 3.4, 3.5, 3.6)
-* Python `VirtualEnv <http://www.virtualenv.org/>`_ and ``pip`` (recommended installation method; your OS/distribution should have packages for these)
-
-Installation
-------------
-
-It's recommended that you install into a virtual environment (virtualenv /
-venv). See the `virtualenv usage documentation <http://www.virtualenv.org/en/latest/>`_
-for information on how to create a venv.
-
-.. code-block:: bash
-
-    pip install python-package-skeleton
-
-Configuration
+Documentation
 -------------
 
-Something here.
-
-Usage
------
-
-Something else here.
+Full documentation for this project is hosted on ReadTheDocs at `https://motion-pipeline.readthedocs.io/en/latest/ <https://motion-pipeline.readthedocs.io/en/latest/>`_.
 
 Bugs and Feature Requests
 -------------------------
@@ -49,69 +36,3 @@ Bugs and Feature Requests
 Bug reports and feature requests are happily accepted via the `GitHub Issue Tracker <https://github.com/jantman/python-package-skeleton/issues>`_. Pull requests are
 welcome. Issues that don't have an accompanying pull request will be worked on
 as my time and priority allows.
-
-Development
------------
-
-To install for development:
-
-1. Fork the `python-package-skeleton <https://github.com/jantman/python-package-skeleton>`_ repository on GitHub
-2. Create a new branch off of master in your fork.
-
-.. code-block:: bash
-
-    $ virtualenv python-package-skeleton
-    $ cd python-package-skeleton && source bin/activate
-    $ pip install -e git+git@github.com:YOURNAME/python-package-skeleton.git@BRANCHNAME#egg=python-package-skeleton
-    $ cd src/python-package-skeleton
-
-The git clone you're now in will probably be checked out to a specific commit,
-so you may want to ``git checkout BRANCHNAME``.
-
-Guidelines
-++++++++++
-
-* pep8 compliant with some exceptions (see pytest.ini)
-* 100% test coverage with pytest (with valid tests)
-
-Testing
-+++++++
-
-Testing is done via `pytest <http://pytest.org/latest/>`_, driven by `tox <http://tox.testrun.org/>`_.
-
-* testing is as simple as:
-
-  * ``pip install tox``
-  * ``tox``
-
-* If you want to pass additional arguments to pytest, add them to the tox command line after "--". i.e., for verbose pytext output on py27 tests: ``tox -e py27 -- -v``
-
-Release Checklist
-+++++++++++++++++
-
-1. Open an issue for the release; cut a branch off master for that issue.
-2. Confirm that there are CHANGES.rst entries for all major changes.
-3. Ensure that Travis tests passing in all environments.
-4. Ensure that test coverage is no less than the last release (ideally, 100%).
-5. Increment the version number in python-package-skeleton/version.py and add version and release date to CHANGES.rst, then push to GitHub.
-6. Confirm that README.rst renders correctly on GitHub.
-7. Upload package to testpypi:
-
-   * Make sure your ~/.pypirc file is correct (a repo called ``test`` for https://testpypi.python.org/pypi)
-   * ``rm -Rf dist``
-   * ``python setup.py register -r https://testpypi.python.org/pypi``
-   * ``python setup.py sdist bdist_wheel``
-   * ``twine upload -r test dist/*``
-   * Check that the README renders at https://testpypi.python.org/pypi/python-package-skeleton
-
-8. Create a pull request for the release to be merged into master. Upon successful Travis build, merge it.
-9. Tag the release in Git, push tag to GitHub:
-
-   * tag the release. for now the message is quite simple: ``git tag -s -a X.Y.Z -m 'X.Y.Z released YYYY-MM-DD'``
-   * push the tag to GitHub: ``git push origin X.Y.Z``
-
-11. Upload package to live pypi:
-
-    * ``twine upload dist/*``
-
-10. make sure any GH issues fixed in the release were closed.

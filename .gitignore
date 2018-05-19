@@ -66,3 +66,5 @@ include/
 
 .idea/
 man/
+
+motion_pipeline/mysettings.py

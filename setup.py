@@ -44,15 +44,17 @@ with open('README.rst') as file:
 # These should be just the absolute minimum requiremenrs for
 # the motion_handler.py script to run.
 requires = [
-    'boto3'
+    'boto3',
+    'psutil',
+    'anyjson'
 ]
 
 # Requirements for everything beyond that...
 extras_require = {
     'web': [],
-    'worker': [],
-    'imaging': []
+    'worker': []
 }
+
 all_req = list(set([
     req for item in extras_require for req in extras_require[item]
 ]))
@@ -60,14 +62,23 @@ extras_require['all'] = all_req
 
 # @TODO - see: https://pypi.python.org/pypi?%3Aaction=list_classifiers
 classifiers = [
-    'Development Status :: 1 - Planning',
+    'Development Status :: 2 - Pre-Alpha',
     'License :: OSI Approved :: GNU Affero General Public License '
     'v3 or later (AGPLv3+)',
+    'Environment :: No Input/Output (Daemon)',
+    'Natural Language :: English',
+    'Operating System :: OS Independent',
+    'Topic :: Home Automation',
+    'Topic :: Multimedia :: Video',
+    'Topic :: Other/Nonlisted Topic',
+    'Topic :: Security',
     'Programming Language :: Python',
     'Programming Language :: Python :: 3',
     'Programming Language :: Python :: 3.4',
     'Programming Language :: Python :: 3.5',
     'Programming Language :: Python :: 3.6',
+    'Programming Language :: Python :: 3.7',
+    'Programming Language :: Python :: 3 :: Only'
 ]
 
 setup(
@@ -82,6 +93,11 @@ setup(
     long_description=long_description,
     install_requires=requires,
     extras_require=extras_require,
+    entry_points={
+        'console_scripts': [
+            'motion-handler=motion_pipeline.motion_handler:entrypoint'
+        ]
+    },
     keywords="motion video frontend detection",
     classifiers=classifiers
 )

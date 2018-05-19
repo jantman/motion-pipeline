@@ -10,9 +10,9 @@ BUCKET_PREFIX = 'motion/'
 #: MINIO_ACCESS_KEY and MINIO_SECRET_KEY settings. If using S3, leave MINIO_URL
 #: as None. When using S3, credentials will be retrieved using the normal
 #: cross-SDK methods used by boto3, and the MINIO key settings are ignored.
-MINIO_URL =
-MINIO_ACCESS_KEY = ''
-MINIO_SECRET_KEY = ''
+MINIO_URL = 'http://192.168.0.24:9000'
+MINIO_ACCESS_KEY = 'abcd'
+MINIO_SECRET_KEY = '123abc456'
 
 ###############################
 # motion_handler.py settings #

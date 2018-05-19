@@ -18,7 +18,7 @@ For installations other than on RaspberryPi or similar dedicated systems, it's r
 To install the requirements for ``motion-handler`` on a RaspberryPi running Raspbian Stretch (``2018-04-18-raspbian-stretch-lite`` image) I did the following:
 
 1. ``wget https://github.com/Motion-Project/motion/releases/download/release-4.1.1/pi_stretch_motion_4.1.1-1_armhf.deb && sudo apt install ./pi_stretch_motion_4.1.1-1_armhf.deb`` - this installs the ``motion`` [4.1.1 package from GitHub](https://github.com/Motion-Project/motion/releases/tag/release-4.1.1), which includes some important fixes over the 4.0-1 package in the Raspbian Stretch repositories.
-2. ``sudo apt-get install python3-pip git``
+2. ``sudo apt-get install python3-pip git python3-dev``
 
 If you don't have them installed already, you may need to install the common build tools on your OS.
 

@@ -44,9 +44,11 @@ with open('README.rst') as file:
 # These should be just the absolute minimum requiremenrs for
 # the motion_handler.py script to run.
 requires = [
-    'boto3',
-    'psutil',
-    'anyjson'
+    'boto3>=2.48.0, <3.0.0',
+    'psutil>=5.0.0, <6.0.0',
+    'anyjson>=0.3.0, <1.0.0',
+    'hiredis>=0.2.0, <1.0.0',
+    'redis>=2.10.0, <3.0.0'
 ]
 
 # Requirements for everything beyond that...

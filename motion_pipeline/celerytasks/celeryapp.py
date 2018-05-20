@@ -36,11 +36,14 @@ Jason Antman <jason@jasonantman.com> <http://www.jasonantman.com>
 """
 
 from celery import Celery
-from celery.utils.log import get_task_logger
+import logging
 import motion_pipeline.settings as settings
 
-logger = get_task_logger(__name__)
+logger = logging.getLogger(__name__)
 
+logger.debug(
+    'Initializing celery app with broker=%s', settings.REDIS_BROKER_URL
+)
 app = Celery('test_consumer', broker=settings.REDIS_BROKER_URL)
 
 app.conf.update(

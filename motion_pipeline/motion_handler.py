@@ -54,11 +54,10 @@ except ImportError:
     from json import dumps as serialize
     from json import loads as deserialize
 
-from motion_pipeline.celerytasks.tasks import motion_ingest
-
 
 logger = None
 settings = None
+motion_ingest = None
 
 KNOWN_ACTIONS = [
     'cam_found',
@@ -68,7 +67,8 @@ KNOWN_ACTIONS = [
     'movie_end',
     'picture_save',
     'cron',
-    'dump-settings'
+    'dump-settings',
+    'heartbeat'
 ]
 FILE_UPLOAD_ACTIONS = ['movie_end', 'picture_save']
 START_TIME = time.time()
@@ -269,7 +269,7 @@ def daemonize():
 
 
 def main(args):
-    global logger, settings
+    global logger, settings, motion_ingest
     if args.config is not None:
         os.environ['MOTION_SETTINGS_PATH'] = args.config
     settings = importlib.import_module('motion_pipeline.settings')
@@ -278,6 +278,10 @@ def main(args):
         for k in sorted(s.keys()):
             print('%s = %s' % (k, s[k]))
         raise SystemExit(0)
+    # This references 'settings', so must be imported after that module
+    motion_ingest = importlib.import_module(
+        'motion_pipeline.celerytasks.tasks'
+    ).motion_ingest
     logging.basicConfig(**get_basicconfig_kwargs(args))
     logger = logging.getLogger()
     for lname in ['boto3', 'botocore', 's3transfer']:

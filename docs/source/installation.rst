@@ -5,6 +5,8 @@ Installation
 
 motion-pipeline is made up of three overall components that can be installed separately: ``motion_handler.py`` (the script used by ``motion`` itself in the ``on_*`` settings), the task worker, and the web frontend.
 
+.. _installation:requirements:
+
 Requirements
 ------------
 
@@ -22,6 +24,8 @@ To install the requirements for ``motion-handler`` on a RaspberryPi running Rasp
 
 If you don't have them installed already, you may need to install the common build tools on your OS.
 
+.. _installation.dependencies:
+
 Installation of Dependencies
 ----------------------------
 
@@ -29,6 +33,8 @@ Installation of Dependencies
 * To install motion-pipeline and the dependencies for the task worker: ``pip install motion-pipeline[worker]``
 * To install motion-pipeline and the dependencies for the web frontend: ``pip install motion-pipeline[web]``
 * To install all of the above: ``pip install motion-pipeline[all]``
+
+.. _installation.motion_handler:
 
 Installation of motion_handler.py
 ---------------------------------

@@ -54,6 +54,8 @@ except ImportError:
     from json import dumps as serialize
     from json import loads as deserialize
 
+from motion_pipeline.celerytasks.tasks import motion_ingest
+
 
 logger = None
 settings = None
@@ -107,16 +109,18 @@ class MotionHandler(object):
 
     def run(self, action, args_dict):
         logger.debug('run() action=%s args=%s', action, args_dict)
-        logger.debug('Finding bucket')
-        bkt = self._s3.Bucket(settings.BUCKET_NAME)
-        logger.debug('Got bucket')
-        self.upload_json(bkt, args_dict)
+        logger.debug('Enqueueing Celery task...')
+        motion_ingest.delay(action, args_dict)
         if action not in FILE_UPLOAD_ACTIONS:
             logger.debug('No file upload; run finished.')
             return
+        logger.debug('Finding bucket')
+        bkt = self._s3.Bucket(settings.BUCKET_NAME)
+        logger.debug('Got bucket')
         for attempt in range(0, settings.HANDLER_MAX_UPLOAD_ATTEMPTS):
             try:
                 self.upload_file(bkt, args_dict)
+                motion_ingest.delay(action, args_dict)
                 return
             except Exception:
                 logger.error(
@@ -126,25 +130,6 @@ class MotionHandler(object):
                 time.sleep(5)
         else:
             raise RuntimeError('ERROR: All upload attempts failed.')
-
-    def upload_json(self, bucket, args):
-        j = serialize(args)
-        obj_key = '%s%s.json' % (
-            settings.BUCKET_PREFIX, os.path.basename(args['filename'])
-        )
-        logger.debug('Uploading args JSON to: %s', obj_key)
-        start_time = time.time()
-        bucket.put_object(
-            ACL='private',
-            Body=j,
-            ContentType='application/json',
-            Key=obj_key
-        )
-        end_time = time.time()
-        logger.info(
-            'Uploaded %d bytes of JSON to s3://%s/%s in %.4fs',
-            len(j), bucket.name, obj_key, end_time - start_time
-        )
 
     def upload_file(self, bucket, args):
         assert args['filename'] is not None

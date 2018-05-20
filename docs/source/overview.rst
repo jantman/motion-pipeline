@@ -12,6 +12,8 @@ The architecture is intended to be decoupled, equally happy on a single fanless 
 Architecture
 ------------
 
+The main architecture includes three pieces: ``motion_handler.py`` that is triggered by ``motion``, the asynchronous task workers, and the web frontend. It relies on Redis, MySQL, and Amazon S3 or a local S3-compatible storage service (`minio <https://www.minio.io/>`_) as dependencies.
+
 Motion Ingest
 +++++++++++++
 

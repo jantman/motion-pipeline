@@ -1,3 +1,9 @@
+#########################
+# Redis Broker Settings #
+#########################
+
+REDIS_BROKER_URL = 'redis://localhost:6379/0'
+
 ###############################
 # S3 / Minio Storage Settings #
 ###############################

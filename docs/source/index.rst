@@ -12,6 +12,7 @@ Contents
    Overview <overview>
    Installation <installation>
    Configuration <configuration>
+   Running <running>
    Development <development>
    API <modules>
    Changelog <changes>

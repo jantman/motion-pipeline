@@ -97,7 +97,8 @@ setup(
     extras_require=extras_require,
     entry_points={
         'console_scripts': [
-            'motion-handler=motion_pipeline.motion_handler:entrypoint'
+            'motion-handler=motion_pipeline.motion_handler:entrypoint',
+            'motion-queuepeek=motion_pipeline.celerytasks.queuepeek:main'
         ]
     },
     keywords="motion video frontend detection",

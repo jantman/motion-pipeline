@@ -109,9 +109,9 @@ class MotionHandler(object):
 
     def run(self, action, args_dict):
         logger.debug('run() action=%s args=%s', action, args_dict)
-        logger.debug('Enqueueing Celery task...')
-        motion_ingest.delay(action, args_dict)
         if action not in FILE_UPLOAD_ACTIONS:
+            logger.debug('Enqueueing Celery task...')
+            motion_ingest.delay(action, args_dict)
             logger.debug('No file upload; run finished.')
             return
         logger.debug('Finding bucket')
@@ -120,7 +120,10 @@ class MotionHandler(object):
         for attempt in range(0, settings.HANDLER_MAX_UPLOAD_ATTEMPTS):
             try:
                 self.upload_file(bkt, args_dict)
+                logger.debug('Enqueueing Celery task for file upload...')
                 motion_ingest.delay(action, args_dict)
+                os.unlink(args_dict['filename'])
+                logger.debug('Deleted: %s', args_dict['filename'])
                 return
             except Exception:
                 logger.error(
@@ -156,8 +159,6 @@ class MotionHandler(object):
             'Uploaded %s file to s3://%s/%s in %.4fs',
             fsize, bucket.name, obj_key, end_time - start_time
         )
-        os.unlink(args['filename'])
-        logger.debug('Deleted: %s', args['filename'])
 
 
 def parse_args(argv):

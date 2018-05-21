@@ -303,13 +303,14 @@ def main(args):
     if arg_dict.get('text_event', None) is None:
         arg_dict['text_event'] = datetime.now().strftime('%Y%m%d%H%M%S')
         logger.debug('set text_event to: %s', arg_dict['text_event'])
-    if arg_dict['filename'] is None:
-        arg_dict['filename'] = '%s_%s' % (arg_dict['text_event'], args.action)
+    save_fname = arg_dict['filename']
+    if save_fname is None:
+        save_fname = '%s_%s' % (arg_dict['text_event'], args.action)
     try:
         MotionHandler().run(args.action, arg_dict)
     except Exception:
         p = os.path.join(
-            settings.MOTION_SAVE_DIR, '%s.json' % arg_dict['filename']
+            settings.MOTION_SAVE_DIR, '%s.json' % save_fname
         )
         with open(p, 'w') as fh:
             fh.write(serialize(arg_dict))

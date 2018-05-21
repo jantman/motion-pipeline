@@ -96,31 +96,37 @@ class MotionTaskProcessor(object):
 
     def _handle_event_end(self, **kwargs):
         e = db_session.query(MotionEvent).get(kwargs['text_event'])
-        if e is None:
+        if e is not None:
             logger.debug(
-                'Writing event_end to DB without matching started event '
-                '(text_event=%s)', kwargs['text_event']
+                'Writing event_end to DB for existing event %s',
+                kwargs['text_event']
             )
-            _date = datetime.strptime(
-                kwargs['call_date'], '%Y-%m-%d %H:%M:%S'
-            )
-            e = MotionEvent(
-                text_event=kwargs['text_event'],
-                date=_date,
-                event_id=kwargs['event_id'],
-                frame_num=kwargs['frame_num'],
-                cam_num=kwargs['cam'],
-                changed_pixels=kwargs['changed_px'],
-                noise=kwargs['noise'],
-                motion_width=kwargs['motion_width'],
-                motion_height=kwargs['motion_height'],
-                motion_center_x=kwargs['motion_center_x'],
-                motion_center_y=kwargs['motion_center_y'],
-            )
-            db_session.add(e)
-        else:
-            logger.info('Writing event_end to DB for existing event.')
-        e.is_finished = True
+            e.is_finished = True
+            db_session.commit()
+            return
+        # else we have an event_end without a matching event_start
+        logger.debug(
+            'Writing event_end to DB without matching started event '
+            '(text_event=%s)', kwargs['text_event']
+        )
+        _date = datetime.strptime(
+            kwargs['call_date'], '%Y-%m-%d %H:%M:%S'
+        )
+        e = MotionEvent(
+            text_event=kwargs['text_event'],
+            date=_date,
+            event_id=kwargs['event_id'],
+            frame_num=kwargs['frame_num'],
+            cam_num=kwargs['cam'],
+            changed_pixels=kwargs['changed_px'],
+            noise=kwargs['noise'],
+            motion_width=kwargs['motion_width'],
+            motion_height=kwargs['motion_height'],
+            motion_center_x=kwargs['motion_center_x'],
+            motion_center_y=kwargs['motion_center_y'],
+            is_finished=True
+        )
+        db_session.add(e)
         db_session.commit()
 
     def _handle_file_upload(self, **kwargs):

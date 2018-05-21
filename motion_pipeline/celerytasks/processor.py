@@ -42,7 +42,7 @@ from datetime import datetime
 
 from motion_pipeline.database.db import init_db, db_session, cleanup_db
 from motion_pipeline.database.models import Upload, MotionEvent
-from motion_pipeline.utils import KNOWN_ACTIONS, FILE_UPLOAD_ACTIONS
+from motion_pipeline.motion_handler import FILE_UPLOAD_ACTIONS
 
 logger = get_task_logger(__name__)
 

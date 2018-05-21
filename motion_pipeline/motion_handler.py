@@ -40,14 +40,10 @@ import sys
 import argparse
 import logging
 from datetime import datetime
-import boto3
-from botocore.client import Config
 import time
 import os
 import psutil
 import importlib
-
-from motion_pipeline.utils import KNOWN_ACTIONS, FILE_UPLOAD_ACTIONS
 
 try:
     from anyjson import serialize
@@ -57,9 +53,26 @@ except ImportError:
     from json import loads as deserialize
 
 
+# imported in main, after daemonization
 logger = None
 settings = None
 motion_ingest = None
+boto3 = None
+Config = None
+
+KNOWN_ACTIONS = [
+    'cam_found',
+    'cam_lost',
+    'event_end',
+    'event_start',
+    'movie_end',
+    'picture_save',
+    'cron',
+    'dump-settings',
+    'heartbeat'
+]
+
+FILE_UPLOAD_ACTIONS = ['movie_end', 'picture_save']
 
 START_TIME = time.time()
 
@@ -259,7 +272,9 @@ def daemonize():
 
 
 def main(args):
-    global logger, settings, motion_ingest
+    global logger, settings, motion_ingest, boto3, Config
+    import boto3
+    from botocore.client import Config
     if args.config is not None:
         os.environ['MOTION_SETTINGS_PATH'] = args.config
     settings = importlib.import_module('motion_pipeline.settings')

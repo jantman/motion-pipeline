@@ -38,21 +38,6 @@ Jason Antman <jason@jasonantman.com> <http://www.jasonantman.com>
 from datetime import datetime
 
 
-KNOWN_ACTIONS = [
-    'cam_found',
-    'cam_lost',
-    'event_end',
-    'event_start',
-    'movie_end',
-    'picture_save',
-    'cron',
-    'dump-settings',
-    'heartbeat'
-]
-
-FILE_UPLOAD_ACTIONS = ['movie_end', 'picture_save']
-
-
 def dtnow():
     """
     Return the current datetime as a timezone-aware DateTime object in UTC.

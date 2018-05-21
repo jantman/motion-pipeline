@@ -59,6 +59,7 @@ class MotionTaskProcessor(object):
         pass
 
     def process(self, *args, **kwargs):
+        logger.info('Picked up task: args=%s kwargs=%s', args, kwargs)
         if args[0] in FILE_UPLOAD_ACTIONS:
             self._handle_file_upload(**kwargs)
         elif args[0] == 'event_start':
@@ -74,6 +75,7 @@ class MotionTaskProcessor(object):
             )
 
     def _handle_event_start(self, **kwargs):
+        logger.info('Writing event_start to DB')
         _date = datetime.strptime(
             kwargs['call_date'], '%Y-%m-%d %H:%M:%S'
         )
@@ -95,6 +97,10 @@ class MotionTaskProcessor(object):
     def _handle_event_end(self, **kwargs):
         e = db_session.query(MotionEvent).get(kwargs['text_event'])
         if e is None:
+            logger.debug(
+                'Writing event_end to DB without matching started event '
+                '(text_event=%s)', kwargs['text_event']
+            )
             _date = datetime.strptime(
                 kwargs['call_date'], '%Y-%m-%d %H:%M:%S'
             )
@@ -112,10 +118,15 @@ class MotionTaskProcessor(object):
                 motion_center_y=kwargs['motion_center_y'],
             )
             db_session.add(e)
+        else:
+            logger.info('Writing event_end to DB for existing event.')
         e.is_finished = True
         db_session.commit()
 
     def _handle_file_upload(self, **kwargs):
+        logger.debug(
+            'Writing file upload to DB; filename=%s', kwargs['filename']
+        )
         _date = datetime.strptime(
             kwargs['call_date'], '%Y-%m-%d %H:%M:%S'
         )

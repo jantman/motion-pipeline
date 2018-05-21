@@ -64,7 +64,7 @@ def main():
     print(
         'All models are imported; database session is available as "db_session"'
     )
-    code.interact(local=locals())
+    code.interact(local=dict(globals(), **locals()))
 
 
 if __name__ == "__main__":

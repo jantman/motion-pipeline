@@ -4,6 +4,12 @@
 
 REDIS_BROKER_URL = 'redis://localhost:6379/0'
 
+#####################
+# Database Settings #
+#####################
+
+DB_CONNSTRING = 'mysql+pymysql://user:pass@host:3306/DbName?charset=utf8mb4'
+
 ###############################
 # S3 / Minio Storage Settings #
 ###############################

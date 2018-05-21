@@ -35,38 +35,76 @@ Jason Antman <jason@jasonantman.com> <http://www.jasonantman.com>
 ##################################################################################
 """
 
-# !!! IMPORTANT !!! - This module will also be imported in motion_handler.py
-# and the web components. Imports here should be as minimal as possible, with
-# most imports in motion_pipeline.celerytasks.processor
 
-from celery.utils.log import get_task_logger
+import logging
+import os
+import warnings
+import motion_pipeline.settings as settings
 
-from motion_pipeline.celerytasks.celeryapp import app
+from sqlalchemy import create_engine
+from sqlalchemy.orm import scoped_session, sessionmaker
+from pymysql.err import Warning
 
-logger = get_task_logger(__name__)
 
+logger = logging.getLogger(__name__)
 
-@app.task(
-    bind=True, name='motion_ingest', max_retries=4, acks_late=True,
-    task_time_limit=30
+logger.debug('Creating DB engine with connection: %s',
+             settings.DB_CONNSTRING)
+
+echo = False
+if os.environ.get('SQL_ECHO', '') == 'true':
+    echo = True
+
+# For some reason, with PyMySQL, even setting sql_mode to TRADITIONAL isn't
+# raising an Exception when data is truncated. So we need to explicitly convert
+# ``pymysql.err.Warning`` to an exception...
+warnings.simplefilter('error', category=Warning)
+
+engine_args = {
+    'convert_unicode': True,
+    'echo': echo,
+    'pool_recycle': 3600
+}
+
+if settings.DB_CONNSTRING.startswith('mysql'):
+    engine_args['connect_args'] = {'sql_mode': 'TRADITIONAL'}
+
+if 'SQL_POOL_PRE_PING' in os.environ:
+    engine_args['pool_pre_ping'] = True
+
+#: The database engine object; return value of
+#: :py:func:`sqlalchemy.create_engine`.
+engine = create_engine(settings.DB_CONNSTRING, **engine_args)
+
+logger.debug('Creating DB session')
+
+#: :py:class:`sqlalchemy.orm.scoping.scoped_session` session
+db_session = scoped_session(
+    sessionmaker(autocommit=False, autoflush=False, bind=engine)
 )
-def motion_ingest(self, *args, **kwargs):
+
+logger.debug('Setting up Base and query')
+
+from motion_pipeline.database.models.base import Base  # noqa
+Base.query = db_session.query_property()
+
+
+def init_db():
     """
-    Task to ingest new events or pictures/movies from motion.
+    Initialize the database; call
+    :py:meth:`sqlalchemy.schema.MetaData.create_all` on the metadata object.
     """
-    logger.debug(
-        'Running task motion_ingest() id=%s retries=%d args=%s kwargs=%s',
-        self.request.id, self.request.retries, args, kwargs
-    )
-    try:
-        from motion_pipeline.celerytasks.processor import MotionTaskProcessor
-        kwargs['retries'] = self.request.retries
-        MotionTaskProcessor().process(*args, **kwargs)
-        logger.debug('Task %s complete.', self.request.id)
-    except Exception as ex:
-        logger.warning(
-            'Caught exception running task with args=%s kwargs=%s: %s' % (
-                args, kwargs, ex
-            ), exc_info=True
-        )
-        self.retry(countdown=2 ** self.request.retries)
+    logger.debug('Initializing database')
+    Base.metadata.create_all(engine)
+    logger.debug('Done initializing DB')
+
+
+def cleanup_db():
+    """
+    This must be called from all scripts, using
+
+        atexit.register(cleanup_db)
+
+    """
+    logger.debug('Closing DB session')
+    db_session.remove()

@@ -55,7 +55,11 @@ requires = [
 # Requirements for everything beyond that...
 extras_require = {
     'web': [],
-    'worker': []
+    'worker': [
+        'PyMySQL>=0.8.0, <1.0.0',
+        'SQLAlchemy-Utc>=0.10.0, <1.0.0',
+        'SQLAlchemy>=1.2.0, <1.3.0'
+    ]
 }
 
 all_req = list(set([
@@ -99,7 +103,8 @@ setup(
     entry_points={
         'console_scripts': [
             'motion-handler=motion_pipeline.motion_handler:entrypoint',
-            'motion-queuepeek=motion_pipeline.celerytasks.queuepeek:main'
+            'motion-queuepeek=motion_pipeline.celerytasks.queuepeek:main',
+            'motion-initdb=motion_pipeline.database.initdb:main'
         ]
     },
     keywords="motion video frontend detection",

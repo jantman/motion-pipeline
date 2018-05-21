@@ -35,9 +35,19 @@ Jason Antman <jason@jasonantman.com> <http://www.jasonantman.com>
 ##################################################################################
 """
 
+import os
+import atexit
 from celery.utils.log import get_task_logger
+from datetime import datetime
+
+from motion_pipeline.database.db import init_db, db_session, cleanup_db
+from motion_pipeline.database.models import Upload, MotionEvent
+from motion_pipeline.utils import KNOWN_ACTIONS, FILE_UPLOAD_ACTIONS
 
 logger = get_task_logger(__name__)
+
+atexit.register(cleanup_db)
+init_db()
 
 
 class MotionTaskProcessor(object):
@@ -49,7 +59,79 @@ class MotionTaskProcessor(object):
         pass
 
     def process(self, *args, **kwargs):
-        logger.warning('Processing task; args=%s kwargs=%s', args, kwargs)
-        if kwargs.get('retries', 6) < 2:
-            raise RuntimeError('foo')
-        return True
+        if args[0] in FILE_UPLOAD_ACTIONS:
+            self._handle_file_upload(**kwargs)
+        elif args[0] == 'event_start':
+            self._handle_event_start(**kwargs)
+        elif args[0] == 'event_end':
+            self._handle_event_end(**kwargs)
+        elif args[0] == 'heartbeat':
+            logger.warning('Ignoring heartbeat task: %s', kwargs)
+        else:
+            logger.error(
+                'Discarding task with unknown action "%s": %s',
+                args[0], kwargs
+            )
+
+    def _handle_event_start(self, **kwargs):
+        _date = datetime.strptime(
+            kwargs['call_date'], '%Y-%m-%d %H:%M:%S'
+        )
+        db_session.add(MotionEvent(
+            text_event=kwargs['text_event'],
+            date=_date,
+            event_id=kwargs['event_id'],
+            frame_num=kwargs['frame_num'],
+            cam_num=kwargs['cam'],
+            changed_pixels=kwargs['changed_px'],
+            noise=kwargs['noise'],
+            motion_width=kwargs['motion_width'],
+            motion_height=kwargs['motion_height'],
+            motion_center_x=kwargs['motion_center_x'],
+            motion_center_y=kwargs['motion_center_y'],
+        ))
+        db_session.commit()
+
+    def _handle_event_end(self, **kwargs):
+        e = db_session.query(MotionEvent).get(kwargs['text_event'])
+        if e is None:
+            _date = datetime.strptime(
+                kwargs['call_date'], '%Y-%m-%d %H:%M:%S'
+            )
+            e = MotionEvent(
+                text_event=kwargs['text_event'],
+                date=_date,
+                event_id=kwargs['event_id'],
+                frame_num=kwargs['frame_num'],
+                cam_num=kwargs['cam'],
+                changed_pixels=kwargs['changed_px'],
+                noise=kwargs['noise'],
+                motion_width=kwargs['motion_width'],
+                motion_height=kwargs['motion_height'],
+                motion_center_x=kwargs['motion_center_x'],
+                motion_center_y=kwargs['motion_center_y'],
+            )
+            db_session.add(e)
+        e.is_finished = True
+        db_session.commit()
+
+    def _handle_file_upload(self, **kwargs):
+        _date = datetime.strptime(
+            kwargs['call_date'], '%Y-%m-%d %H:%M:%S'
+        )
+        db_session.add(Upload(
+            filename=os.path.basename(kwargs['filename']),
+            date=_date,
+            event_id=kwargs['event_id'],
+            frame_num=kwargs['frame_num'],
+            cam_num=kwargs['cam'],
+            changed_pixels=kwargs['changed_px'],
+            noise=kwargs['noise'],
+            text_event=kwargs['text_event'],
+            motion_width=kwargs['motion_width'],
+            motion_height=kwargs['motion_height'],
+            motion_center_x=kwargs['motion_center_x'],
+            motion_center_y=kwargs['motion_center_y'],
+            file_type=kwargs['filetype']
+        ))
+        db_session.commit()

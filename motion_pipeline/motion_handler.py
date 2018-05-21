@@ -47,6 +47,8 @@ import os
 import psutil
 import importlib
 
+from motion_pipeline.utils import KNOWN_ACTIONS, FILE_UPLOAD_ACTIONS
+
 try:
     from anyjson import serialize
     from anyjson import deserialize
@@ -59,18 +61,6 @@ logger = None
 settings = None
 motion_ingest = None
 
-KNOWN_ACTIONS = [
-    'cam_found',
-    'cam_lost',
-    'event_end',
-    'event_start',
-    'movie_end',
-    'picture_save',
-    'cron',
-    'dump-settings',
-    'heartbeat'
-]
-FILE_UPLOAD_ACTIONS = ['movie_end', 'picture_save']
 START_TIME = time.time()
 
 
@@ -111,7 +101,7 @@ class MotionHandler(object):
         logger.debug('run() action=%s args=%s', action, args_dict)
         if action not in FILE_UPLOAD_ACTIONS:
             logger.debug('Enqueueing Celery task...')
-            motion_ingest.delay(action, args_dict)
+            motion_ingest.delay(action, **args_dict)
             logger.debug('No file upload; run finished.')
             return
         logger.debug('Finding bucket')
@@ -121,7 +111,7 @@ class MotionHandler(object):
             try:
                 self.upload_file(bkt, args_dict)
                 logger.debug('Enqueueing Celery task for file upload...')
-                motion_ingest.delay(action, args_dict)
+                motion_ingest.delay(action, **args_dict)
                 os.unlink(args_dict['filename'])
                 logger.debug('Deleted: %s', args_dict['filename'])
                 return

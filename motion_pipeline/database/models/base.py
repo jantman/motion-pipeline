@@ -35,38 +35,38 @@ Jason Antman <jason@jasonantman.com> <http://www.jasonantman.com>
 ##################################################################################
 """
 
-# !!! IMPORTANT !!! - This module will also be imported in motion_handler.py
-# and the web components. Imports here should be as minimal as possible, with
-# most imports in motion_pipeline.celerytasks.processor
-
-from celery.utils.log import get_task_logger
-
-from motion_pipeline.celerytasks.celeryapp import app
-
-logger = get_task_logger(__name__)
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.schema import MetaData
 
 
-@app.task(
-    bind=True, name='motion_ingest', max_retries=4, acks_late=True,
-    task_time_limit=30
-)
-def motion_ingest(self, *args, **kwargs):
-    """
-    Task to ingest new events or pictures/movies from motion.
-    """
-    logger.debug(
-        'Running task motion_ingest() id=%s retries=%d args=%s kwargs=%s',
-        self.request.id, self.request.retries, args, kwargs
-    )
-    try:
-        from motion_pipeline.celerytasks.processor import MotionTaskProcessor
-        kwargs['retries'] = self.request.retries
-        MotionTaskProcessor().process(*args, **kwargs)
-        logger.debug('Task %s complete.', self.request.id)
-    except Exception as ex:
-        logger.warning(
-            'Caught exception running task with args=%s kwargs=%s: %s' % (
-                args, kwargs, ex
-            ), exc_info=True
-        )
-        self.retry(countdown=2 ** self.request.retries)
+convention = {
+    "ix": 'ix_%(column_0_label)s',
+    "uq": "uq_%(table_name)s_%(column_0_name)s",
+    # "ck": "ck_%(table_name)s_%(constraint_name)s",
+    "fk": "fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s",
+    "pk": "pk_%(table_name)s"
+}
+
+Base = declarative_base(metadata=MetaData(naming_convention=convention))
+
+
+class ModelAsDict(object):
+
+    #: Class properties to include in :py:attr:`~.as_dict` result.
+    _dict_properties = []
+
+    @property
+    def as_dict(self):
+        """
+        Return a dict representation of the model.
+
+        :return: model's variables/attributes
+        :rtype: dict
+        """
+        d = {}
+        for k, v in vars(self).items():
+            if not k.startswith('_'):
+                d[k] = v
+        for k in self._dict_properties:
+            d[k] = getattr(self, k)
+        return d

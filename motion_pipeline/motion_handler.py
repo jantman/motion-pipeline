@@ -181,7 +181,8 @@ def parse_args(argv):
     p.add_argument('--cam', dest='cam_num', type=int, default=None)
     p.add_argument('--cam-name', dest='cam_name', type=str, default=None)
     p.add_argument('--changed_px', dest='changed_px', type=int, default=None)
-    p.add_argument('--date', dest='call_date', type=str, default=None)
+    p.add_argument('--date', dest='call_date', type=str,
+                   default=datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
     p.add_argument('--event_id', dest='event_id', type=int, default=None)
     p.add_argument('--filename', dest='filename', type=str, default=None)
     p.add_argument('--filetype', dest='filetype', type=int, default=None)

@@ -39,11 +39,9 @@ Jason Antman <jason@jasonantman.com> <http://www.jasonantman.com>
 # and the web components. Imports here should be as minimal as possible, with
 # most imports in motion_pipeline.celerytasks.processor
 
-import os
 from celery.utils.log import get_task_logger
 
 from motion_pipeline.celerytasks.celeryapp import app
-from motion_pipeline.handler_actions import FILE_UPLOAD_ACTIONS
 
 logger = get_task_logger(__name__)
 
@@ -65,41 +63,10 @@ def motion_ingest(self, *args, **kwargs):
         kwargs['retries'] = self.request.retries
         MotionTaskProcessor(logger).process(*args, **kwargs)
         logger.debug('Task %s complete.', self.request.id)
-        if (
-            args[0] in FILE_UPLOAD_ACTIONS and
-            kwargs.get('filename', None) is not None
-        ):
-            new_video.delay(os.path.basename(kwargs['filename']))
     except Exception as ex:
         logger.warning(
             'Caught exception running task with args=%s kwargs=%s: %s' % (
                 args, kwargs, ex
-            ), exc_info=True
-        )
-        self.retry(countdown=2 ** self.request.retries)
-
-
-@app.task(
-    bind=True, name='new_video', max_retries=4, acks_late=True,
-    task_time_limit=30
-)
-def new_video(self, filename):
-    """
-    Task to handle a new video uploaded to storage. Creates and uploads the
-    thumbnail.
-    """
-    logger.debug(
-        'Running task new_video(%s) id=%s retries=%d', filename,
-        self.request.id, self.request.retries
-    )
-    try:
-        from motion_pipeline.celerytasks.processor import MotionTaskProcessor
-        MotionTaskProcessor(logger).handle_new_video(filename)
-        logger.debug('Task %s complete.', self.request.id)
-    except Exception as ex:
-        logger.warning(
-            'Caught exception running task with filename=%s: %s' % (
-                filename, ex
             ), exc_info=True
         )
         self.retry(countdown=2 ** self.request.retries)

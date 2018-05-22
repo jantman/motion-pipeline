@@ -57,6 +57,9 @@ class Upload(Base, ModelAsDict):
     #: Primary Key
     filename = Column(String(255), primary_key=True)
 
+    #: Name of thumbnail file
+    thumbnail_name = Column(String(255))
+
     #: date of the upload
     date = Column(DateTime)
 

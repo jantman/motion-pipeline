@@ -153,6 +153,11 @@ class MotionTaskProcessor(object):
         _date = datetime.strptime(
             kwargs['call_date'], '%Y-%m-%d %H:%M:%S'
         )
+        thumbnail_name = None
+        if kwargs['filetype'] == 8:
+            thumbnail_name = self._create_and_upload_thumbnail(
+                kwargs['filename']
+            )
         db_session.add(Upload(
             filename=os.path.basename(kwargs['filename']),
             date=_date,
@@ -165,10 +170,11 @@ class MotionTaskProcessor(object):
             threshold=kwargs['threshold'],
             despeckle_labels=kwargs['despeckle_labels'],
             fps=kwargs['fps'],
+            thumbnail_name=thumbnail_name
         ))
         db_session.commit()
 
-    def handle_new_video(self, filename):
+    def _create_and_upload_thumbnail(self, filename):
         if settings.MINIO_LOCAL_MOUNTPOINT is None:
             raise NotImplementedError(
                 'ERROR: Downloading new videos from S3 not yet implemented!'
@@ -176,6 +182,7 @@ class MotionTaskProcessor(object):
         s3 = get_s3_bucket(settings, tasklogger=logger)
         vid_path = os.path.join(settings.MINIO_LOCAL_MOUNTPOINT, filename)
         logger.debug('Handling new video at: %s', vid_path)
+        thumbnail_name = '%s.jpg' % filename
         with autoremoving_tempfile(suffix='.jpg') as imgpath:
             with autoremoving_tempfile(suffix='.jpg') as framepath:
                 # Extract the second frame from the video
@@ -204,9 +211,10 @@ class MotionTaskProcessor(object):
                 i = Image.open(framepath)
                 i.thumbnail(settings.THUMBNAIL_MAX_SIZE, Image.ANTIALIAS)
                 i.save(imgpath, 'JPEG')
-                key = '%s%s.jpg' % (settings.BUCKET_PREFIX, filename)
+                key = '%s%s' % (settings.BUCKET_PREFIX, thumbnail_name)
                 logger.debug('Uploading thumbnail to S3 at: %s', key)
                 s3.upload_file(imgpath, key)
         logger.info(
             'Still thumbnail of %s uploaded to S3 at: %s', filename, key
         )
+        return thumbnail_name

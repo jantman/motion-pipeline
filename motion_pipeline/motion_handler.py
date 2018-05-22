@@ -80,7 +80,7 @@ def sizeof_fmt(num):
 class MotionHandler(object):
 
     def __init__(self):
-        self._s3 = get_s3_bucket(settings)
+        self._bucket = get_s3_bucket(settings)
 
     def run(self, action, args_dict):
         logger.debug('run() action=%s args=%s', action, args_dict)
@@ -90,11 +90,10 @@ class MotionHandler(object):
             logger.debug('No file upload; run finished.')
             return
         logger.debug('Finding bucket')
-        bkt = self._s3.Bucket(settings.BUCKET_NAME)
         logger.debug('Got bucket')
         for attempt in range(0, settings.HANDLER_MAX_UPLOAD_ATTEMPTS):
             try:
-                self.upload_file(bkt, args_dict)
+                self.upload_file(args_dict)
                 logger.debug('Enqueueing Celery task for file upload...')
                 motion_ingest.delay(action, **args_dict)
                 os.unlink(args_dict['filename'])
@@ -109,7 +108,7 @@ class MotionHandler(object):
         else:
             raise RuntimeError('ERROR: All upload attempts failed.')
 
-    def upload_file(self, bucket, args):
+    def upload_file(self, args):
         assert args['filename'] is not None
         obj_key = settings.BUCKET_PREFIX + os.path.basename(args['filename'])
         size_b = os.stat(args['filename']).st_size
@@ -119,7 +118,7 @@ class MotionHandler(object):
             'Uploading %s file from %s to %s', fsize, args['filename'], obj_key
         )
         start_time = time.time()
-        bucket.upload_file(
+        self._bucket.upload_file(
             args['filename'], obj_key,
             ExtraArgs={
                 'ACL': 'private',
@@ -132,7 +131,7 @@ class MotionHandler(object):
         end_time = time.time()
         logger.info(
             'Uploaded %s file to s3://%s/%s in %.4fs',
-            fsize, bucket.name, obj_key, end_time - start_time
+            fsize, self._bucket.name, obj_key, end_time - start_time
         )
 
 

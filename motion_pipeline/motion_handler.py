@@ -57,8 +57,8 @@ except ImportError:
 logger = None
 settings = None
 motion_ingest = None
+get_s3_bucket = None
 boto3 = None
-Config = None
 
 KNOWN_ACTIONS = [
     'cam_found',
@@ -93,22 +93,7 @@ def sizeof_fmt(num):
 class MotionHandler(object):
 
     def __init__(self):
-        if settings.MINIO_URL is None:
-            logger.debug('Initializing MotionHandler with S3')
-            self._s3 = boto3.resource('s3')
-        else:
-            logger.debug(
-                'Initializing MotionHandler with minio: %s (%s)',
-                settings.MINIO_URL, settings.MINIO_ACCESS_KEY
-            )
-            self._s3 = boto3.resource(
-                's3',
-                endpoint_url=settings.MINIO_URL,
-                aws_access_key_id=settings.MINIO_ACCESS_KEY,
-                aws_secret_access_key=settings.MINIO_SECRET_KEY,
-                config=Config(signature_version='s3v4'),
-                region_name='us-east-1'
-            )
+        self._s3 = get_s3_bucket(settings)
 
     def run(self, action, args_dict):
         logger.debug('run() action=%s args=%s', action, args_dict)
@@ -278,12 +263,12 @@ def daemonize():
 
 
 def main(args):
-    global logger, settings, motion_ingest, boto3, Config
-    import boto3
-    from botocore.client import Config
+    global logger, settings, motion_ingest, get_s3_bucket, boto3
     if args.config is not None:
         os.environ['MOTION_SETTINGS_PATH'] = args.config
     settings = importlib.import_module('motion_pipeline.settings')
+    from motion_pipeline.s3connection import get_s3_bucket
+    import boto3
     if args.action == 'dump-settings':
         s = settings.get_settings_dict()
         for k in sorted(s.keys()):

@@ -109,7 +109,7 @@ class MotionTaskProcessor(object):
     def _handle_event_end(self, **kwargs):
         e = db_session.query(MotionEvent).get(kwargs['text_event'])
         if e is not None:
-            logger.debug(
+            logger.info(
                 'Writing event_end to DB for existing event %s',
                 kwargs['text_event']
             )
@@ -117,7 +117,7 @@ class MotionTaskProcessor(object):
             db_session.commit()
             return
         # else we have an event_end without a matching event_start
-        logger.debug(
+        logger.info(
             'Writing event_end to DB without matching started event '
             '(text_event=%s)', kwargs['text_event']
         )
@@ -152,8 +152,8 @@ class MotionTaskProcessor(object):
             thumbnail_name = self._create_and_upload_thumbnail(
                 os.path.basename(kwargs['filename'])
             )
-        logger.debug(
-            'Writing file upload to DB; filename=%s', kwargs['filename']
+        logger.info(
+            'Writing file upload to DB for filename: %s', kwargs['filename']
         )
         _date = datetime.strptime(
             kwargs['call_date'], '%Y-%m-%d %H:%M:%S'
@@ -183,6 +183,8 @@ class MotionTaskProcessor(object):
         vid_path = os.path.join(settings.MINIO_LOCAL_MOUNTPOINT, filename)
         logger.debug('Handling new video at: %s', vid_path)
         thumbnail_name = '%s.jpg' % filename
+        logger.info('Generating still thumbnail of second frame of %s to: %s',
+                    filename, thumbnail_name)
         with autoremoving_tempfile(suffix='.jpg') as imgpath:
             with autoremoving_tempfile(suffix='.jpg') as framepath:
                 # Extract the second frame from the video

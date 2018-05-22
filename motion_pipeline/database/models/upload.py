@@ -63,33 +63,12 @@ class Upload(Base, ModelAsDict):
     #: ID of the event; this resets every time motion restarts
     event_id = Column(Integer)
 
-    #: The frame number
-    frame_num = Column(Integer)
-
     #: The camera number
     cam_num = Column(Integer)
-
-    #: The number of changed pixels
-    changed_pixels = Column(Integer)
-
-    #: The noise level
-    noise = Column(Integer)
 
     #: The "text_event", a unique identifier for the event. This should be
     #: "%t-%Y%m%d%H%M%S-%q-%v"
     text_event = Column(String(255))
-
-    #: The width of the motion area in pixels
-    motion_width = Column(Integer)
-
-    #: The height of the motion area in pixels
-    motion_height = Column(Integer)
-
-    #: The X center of the motion area
-    motion_center_x = Column(Integer)
-
-    #: The Y center of the motion area
-    motion_center_y = Column(Integer)
 
     #: The file type
     file_type = Column(Integer)

@@ -140,15 +140,8 @@ class MotionTaskProcessor(object):
             filename=os.path.basename(kwargs['filename']),
             date=_date,
             event_id=kwargs['event_id'],
-            frame_num=kwargs['frame_num'],
             cam_num=kwargs['cam'],
-            changed_pixels=kwargs['changed_px'],
-            noise=kwargs['noise'],
             text_event=kwargs['text_event'],
-            motion_width=kwargs['motion_width'],
-            motion_height=kwargs['motion_height'],
-            motion_center_x=kwargs['motion_center_x'],
-            motion_center_y=kwargs['motion_center_y'],
             file_type=kwargs['filetype']
         ))
         db_session.commit()

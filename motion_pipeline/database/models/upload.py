@@ -37,8 +37,9 @@ Jason Antman <jason@jasonantman.com> <http://www.jasonantman.com>
 
 import logging
 from sqlalchemy import (
-    Column, Integer, String, DateTime, Boolean
+    Column, Integer, String, DateTime, Boolean, ForeignKey
 )
+from sqlalchemy.orm import relationship
 from motion_pipeline.database.models.base import Base, ModelAsDict
 
 logger = logging.getLogger(__name__)
@@ -77,7 +78,9 @@ class Upload(Base, ModelAsDict):
 
     #: The "text_event", a unique identifier for the event. This should be
     #: "%t-%Y%m%d%H%M%S-%q-%v"
-    text_event = Column(String(255))
+    text_event = Column(String(255), ForeignKey('motion_events.text_event'))
+
+    event = relationship('MotionEvent', back_populates='upload', uselist=False)
 
     #: The file type
     file_type = Column(Integer)

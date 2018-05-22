@@ -39,6 +39,7 @@ import logging
 from sqlalchemy import (
     Column, Integer, String, DateTime, Boolean
 )
+from sqlalchemy.orm import relationship
 from motion_pipeline.database.models.base import Base, ModelAsDict
 
 logger = logging.getLogger(__name__)
@@ -102,6 +103,8 @@ class MotionEvent(Base, ModelAsDict):
 
     #: The Y center of the motion area
     motion_center_y = Column(Integer)
+
+    upload = relationship('Upload', back_populates='event', uselist=False)
 
     #: Whether or not the file has been viewed yet
     is_finished = Column(Boolean, default=False)

@@ -147,17 +147,17 @@ class MotionTaskProcessor(object):
         db_session.commit()
 
     def _handle_file_upload(self, **kwargs):
+        thumbnail_name = None
+        if kwargs['filetype'] == 8:
+            thumbnail_name = self._create_and_upload_thumbnail(
+                os.path.basename(kwargs['filename'])
+            )
         logger.debug(
             'Writing file upload to DB; filename=%s', kwargs['filename']
         )
         _date = datetime.strptime(
             kwargs['call_date'], '%Y-%m-%d %H:%M:%S'
         )
-        thumbnail_name = None
-        if kwargs['filetype'] == 8:
-            thumbnail_name = self._create_and_upload_thumbnail(
-                kwargs['filename']
-            )
         db_session.add(Upload(
             filename=os.path.basename(kwargs['filename']),
             date=_date,

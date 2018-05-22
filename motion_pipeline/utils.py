@@ -35,7 +35,10 @@ Jason Antman <jason@jasonantman.com> <http://www.jasonantman.com>
 ##################################################################################
 """
 
+import os
 from datetime import datetime
+from tempfile import mkstemp
+from contextlib import contextmanager
 
 
 def dtnow():
@@ -46,3 +49,13 @@ def dtnow():
     :rtype: datetime.datetime
     """
     return datetime.now()
+
+
+@contextmanager
+def autoremoving_tempfile(suffix=None):
+    fd, path = mkstemp(prefix='motion-pipeline', suffix=suffix)
+    os.close(fd)
+    try:
+        yield path
+    finally:
+        os.unlink(path)

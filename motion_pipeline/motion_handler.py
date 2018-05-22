@@ -52,6 +52,7 @@ except ImportError:
     from json import dumps as serialize
     from json import loads as deserialize
 
+from motion_pipeline.handler_actions import KNOWN_ACTIONS, FILE_UPLOAD_ACTIONS
 
 # imported in main, after daemonization
 logger = None
@@ -59,20 +60,6 @@ settings = None
 motion_ingest = None
 get_s3_bucket = None
 boto3 = None
-
-KNOWN_ACTIONS = [
-    'cam_found',
-    'cam_lost',
-    'event_end',
-    'event_start',
-    'movie_end',
-    'picture_save',
-    'cron',
-    'dump-settings',
-    'heartbeat'
-]
-
-FILE_UPLOAD_ACTIONS = ['movie_end', 'picture_save']
 
 START_TIME = time.time()
 

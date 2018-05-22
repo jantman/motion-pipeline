@@ -37,12 +37,18 @@ Jason Antman <jason@jasonantman.com> <http://www.jasonantman.com>
 
 import os
 import atexit
-from celery.utils.log import get_task_logger
 from datetime import datetime
+from subprocess import run, PIPE, STDOUT
 
-from motion_pipeline.database.db import init_db, db_session, cleanup_db
+from celery.utils.log import get_task_logger
+from PIL import Image
+
+import motion_pipeline.settings as settings
+from motion_pipeline.database.db import db_session, cleanup_db
 from motion_pipeline.database.models import Upload, MotionEvent
-from motion_pipeline.motion_handler import FILE_UPLOAD_ACTIONS
+from motion_pipeline.handler_actions import FILE_UPLOAD_ACTIONS
+from motion_pipeline.utils import autoremoving_tempfile
+from motion_pipeline.s3connection import get_s3_bucket
 
 logger = get_task_logger(__name__)
 
@@ -54,8 +60,10 @@ class MotionTaskProcessor(object):
     Class to process Celery tasks enqueued in response to ``motion`` events.
     """
 
-    def __init__(self):
-        pass
+    def __init__(self, tasklogger=None):
+        global logger
+        if tasklogger is not None:
+            logger = tasklogger
 
     def process(self, *args, **kwargs):
         logger.info('Picked up task: args=%s kwargs=%s', args, kwargs)
@@ -159,3 +167,46 @@ class MotionTaskProcessor(object):
             fps=kwargs['fps'],
         ))
         db_session.commit()
+
+    def handle_new_video(self, filename):
+        if settings.MINIO_LOCAL_MOUNTPOINT is None:
+            raise NotImplementedError(
+                'ERROR: Downloading new videos from S3 not yet implemented!'
+            )
+        s3 = get_s3_bucket(settings, tasklogger=logger)
+        vid_path = os.path.join(settings.MINIO_LOCAL_MOUNTPOINT, filename)
+        logger.debug('Handling new video at: %s', vid_path)
+        with autoremoving_tempfile(suffix='.jpg') as imgpath:
+            with autoremoving_tempfile(suffix='.jpg') as framepath:
+                # Extract the second frame from the video
+                cmd = [
+                    'ffmpeg', '-y', '-ss', '00:00:00.2',
+                    '-i', vid_path, '-frames:v', '1', framepath
+                ]
+                logger.debug('Running: %s', ' '.join(cmd))
+                res = run(cmd, stdout=PIPE, stderr=STDOUT, timeout=120)
+                if res.returncode != 0:
+                    raise RuntimeError(
+                        'ERROR: ffmpeg command "%s" exited %d:\n%s' % (
+                            ' '.join(cmd), res.returncode, res.stdout
+                        )
+                    )
+                fsize = os.stat(framepath).st_size
+                if fsize < 100:
+                    raise RuntimeError(
+                        'ERROR: ffmpeg command "%s" resulted in %d '
+                        'byte file:\n%s',
+                        ' '.join(cmd), fsize, res.stdout
+                    )
+                logger.debug('ffmpeg complete; %d-byte file', fsize)
+                # create a thumbnail from that
+                logger.debug('Creating thumbnail of still...')
+                i = Image.open(framepath)
+                i.thumbnail(settings.THUMBNAIL_MAX_SIZE, Image.ANTIALIAS)
+                i.save(imgpath, 'JPEG')
+                key = '%s%s.jpg' % (settings.BUCKET_PREFIX, filename)
+                logger.debug('Uploading thumbnail to S3 at: %s', key)
+                s3.upload_file(imgpath, key)
+        logger.info(
+            'Still thumbnail of %s uploaded to S3 at: %s', filename, key
+        )

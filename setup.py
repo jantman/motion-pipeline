@@ -58,7 +58,8 @@ extras_require = {
     'worker': [
         'PyMySQL>=0.8.0, <1.0.0',
         'SQLAlchemy-Utc>=0.10.0, <1.0.0',
-        'SQLAlchemy>=1.2.0, <1.3.0'
+        'SQLAlchemy>=1.2.0, <1.3.0',
+        'Pillow>=5.0.0, <6.0.0'
     ]
 }
 

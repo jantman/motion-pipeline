@@ -35,31 +35,16 @@ Jason Antman <jason@jasonantman.com> <http://www.jasonantman.com>
 ##################################################################################
 """
 
-import logging
-import boto3
-from botocore.client import Config
+KNOWN_ACTIONS = [
+    'cam_found',
+    'cam_lost',
+    'event_end',
+    'event_start',
+    'movie_end',
+    'picture_save',
+    'cron',
+    'dump-settings',
+    'heartbeat'
+]
 
-logger = logging.getLogger(__name__)
-
-
-def get_s3_bucket(settings, tasklogger=None):
-    global logger
-    if tasklogger is not None:
-        logger = tasklogger
-    if settings.MINIO_URL is None:
-        logger.debug('Initializing MotionHandler with S3')
-        s3 = boto3.resource('s3')
-    else:
-        logger.debug(
-            'Initializing MotionHandler with minio: %s (%s)',
-            settings.MINIO_URL, settings.MINIO_ACCESS_KEY
-        )
-        s3 = boto3.resource(
-            's3',
-            endpoint_url=settings.MINIO_URL,
-            aws_access_key_id=settings.MINIO_ACCESS_KEY,
-            aws_secret_access_key=settings.MINIO_SECRET_KEY,
-            config=Config(signature_version='s3v4'),
-            region_name='us-east-1'
-        )
-    return s3.Bucket(settings.BUCKET_NAME)
+FILE_UPLOAD_ACTIONS = ['movie_end', 'picture_save']

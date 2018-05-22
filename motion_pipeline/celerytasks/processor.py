@@ -47,7 +47,6 @@ from motion_pipeline.motion_handler import FILE_UPLOAD_ACTIONS
 logger = get_task_logger(__name__)
 
 atexit.register(cleanup_db)
-init_db()
 
 
 class MotionTaskProcessor(object):

@@ -70,11 +70,26 @@ class MotionEvent(Base, ModelAsDict):
     #: The camera number
     cam_num = Column(Integer)
 
+    #: The camera name
+    cam_name = Column(String(40))
+
+    #: The host that motion is running on
+    host = Column(String(40))
+
     #: The number of changed pixels
     changed_pixels = Column(Integer)
 
+    #: The current threshold setting for motion detection
+    threshold = Column(Integer)
+
     #: The noise level
     noise = Column(Integer)
+
+    #: The number of labels identified by despeckle
+    despeckle_labels = Column(Integer)
+
+    #: The current FPS rate of the camera
+    fps = Column(Integer)
 
     #: The width of the motion area in pixels
     motion_width = Column(Integer)

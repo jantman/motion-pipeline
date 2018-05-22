@@ -66,12 +66,27 @@ class Upload(Base, ModelAsDict):
     #: The camera number
     cam_num = Column(Integer)
 
+    #: The camera name
+    cam_name = Column(String(40))
+
+    #: The host that motion is running on
+    host = Column(String(40))
+
     #: The "text_event", a unique identifier for the event. This should be
     #: "%t-%Y%m%d%H%M%S-%q-%v"
     text_event = Column(String(255))
 
     #: The file type
     file_type = Column(Integer)
+
+    #: The current threshold setting for motion detection
+    threshold = Column(Integer)
+
+    #: The number of labels identified by despeckle
+    despeckle_labels = Column(Integer)
+
+    #: The current FPS rate of the camera
+    fps = Column(Integer)
 
     #: Whether or not the file has been viewed yet
     is_viewed = Column(Boolean, default=False)

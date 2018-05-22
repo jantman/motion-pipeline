@@ -179,6 +179,7 @@ def parse_args(argv):
         help='motion action/event; "dump-settings" will dump settings and exit'
     )
     p.add_argument('--cam', dest='cam_num', type=int, default=None)
+    p.add_argument('--cam-name', dest='cam_name', type=str, default=None)
     p.add_argument('--changed_px', dest='changed_px', type=int, default=None)
     p.add_argument('--date', dest='call_date', type=str, default=None)
     p.add_argument('--event_id', dest='event_id', type=int, default=None)
@@ -199,6 +200,10 @@ def parse_args(argv):
     )
     p.add_argument('--noise', dest='noise', type=int, default=None)
     p.add_argument('--text_event', dest='text_event', type=str, default=None)
+    p.add_argument('--threshold', dest='threshold', type=int, default=None)
+    p.add_argument('--labels', dest='despeckle_labels', type=int, default=None)
+    p.add_argument('--fps', dest='fps', type=int, default=None)
+    p.add_argument('--host', dest='host', type=str, default=None)
     args = p.parse_args(argv)
     return args
 
@@ -313,7 +318,12 @@ def main(args):
         'motion_width': args.motion_width,
         'noise': args.noise,
         'text_event': args.text_event,
-        'action': args.action
+        'action': args.action,
+        'cam_name': args.cam_name,
+        'threshold': args.threshold,
+        'despeckle_labels': args.despeckle_labels,
+        'fps': args.fps,
+        'host': args.host
     }
     if arg_dict.get('text_event', None) is None:
         arg_dict['text_event'] = datetime.now().strftime('%Y%m%d%H%M%S')

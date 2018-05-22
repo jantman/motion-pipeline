@@ -105,6 +105,8 @@ class MotionTaskProcessor(object):
             motion_center_y=kwargs['motion_center_y'],
         ))
         db_session.commit()
+        from motion_pipeline.celerytasks.tasks import newevent_ready
+        newevent_ready.delay(kwargs['text_event'])
 
     def _handle_event_end(self, **kwargs):
         e = db_session.query(MotionEvent).get(kwargs['text_event'])
@@ -147,11 +149,6 @@ class MotionTaskProcessor(object):
         db_session.commit()
 
     def _handle_file_upload(self, **kwargs):
-        thumbnail_name = None
-        if kwargs['filetype'] == 8:
-            thumbnail_name = self._create_and_upload_thumbnail(
-                os.path.basename(kwargs['filename'])
-            )
         logger.info(
             'Writing file upload to DB for filename: %s', kwargs['filename']
         )
@@ -169,16 +166,19 @@ class MotionTaskProcessor(object):
             file_type=kwargs['filetype'],
             threshold=kwargs['threshold'],
             despeckle_labels=kwargs['despeckle_labels'],
-            fps=kwargs['fps'],
-            thumbnail_name=thumbnail_name
+            fps=kwargs['fps']
         ))
         db_session.commit()
+        from motion_pipeline.celerytasks.tasks import do_thumbnail
+        do_thumbnail.delay(os.path.basename(kwargs['filename']))
 
-    def _create_and_upload_thumbnail(self, filename):
+    def create_and_upload_thumbnail(self, filename):
         if settings.MINIO_LOCAL_MOUNTPOINT is None:
             raise NotImplementedError(
                 'ERROR: Downloading new videos from S3 not yet implemented!'
             )
+        upload = db_session.query(Upload).get(filename)
+        assert upload is not None
         s3 = get_s3_bucket(settings, tasklogger=logger)
         vid_path = os.path.join(settings.MINIO_LOCAL_MOUNTPOINT, filename)
         logger.debug('Handling new video at: %s', vid_path)
@@ -219,4 +219,8 @@ class MotionTaskProcessor(object):
         logger.info(
             'Still thumbnail of %s uploaded to S3 at: %s', filename, key
         )
-        return thumbnail_name
+        # update the DB with the thumbnail name
+        upload.thumbnail_name = thumbnail_name
+        db_session.commit()
+        from motion_pipeline.celerytasks.tasks import newvideo_ready
+        newvideo_ready.delay(upload.filename, upload.text_event)

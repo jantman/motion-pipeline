@@ -39,6 +39,7 @@ Jason Antman <jason@jasonantman.com> <http://www.jasonantman.com>
 # and the web components. Imports here should be as minimal as possible, with
 # most imports in motion_pipeline.celerytasks.processor
 
+import os
 from celery.utils.log import get_task_logger
 
 from motion_pipeline.celerytasks.celeryapp import app
@@ -48,7 +49,7 @@ logger = get_task_logger(__name__)
 
 @app.task(
     bind=True, name='motion_ingest', max_retries=4, acks_late=True,
-    task_time_limit=30
+    task_time_limit=30, ignore_result=True
 )
 def motion_ingest(self, *args, **kwargs):
     """
@@ -60,7 +61,6 @@ def motion_ingest(self, *args, **kwargs):
     )
     try:
         from motion_pipeline.celerytasks.processor import MotionTaskProcessor
-        kwargs['retries'] = self.request.retries
         MotionTaskProcessor(logger).process(*args, **kwargs)
         logger.debug('Task %s complete.', self.request.id)
     except Exception as ex:
@@ -68,5 +68,85 @@ def motion_ingest(self, *args, **kwargs):
             'Caught exception running task with args=%s kwargs=%s: %s' % (
                 args, kwargs, ex
             ), exc_info=True
+        )
+        self.retry(countdown=2 ** self.request.retries)
+
+
+@app.task(
+    bind=True, name='do_thumbnail', max_retries=4, acks_late=True,
+    task_time_limit=30, ignore_result=True
+)
+def do_thumbnail(self, filename):
+    """
+    Task to generate thumbnails for new pictures/movies from motion.
+    """
+    logger.debug(
+        'Running task do_thumbnail() id=%s retries=%d filename=%s',
+        self.request.id, self.request.retries, filename
+    )
+    try:
+        from motion_pipeline.celerytasks.processor import MotionTaskProcessor
+        MotionTaskProcessor(logger).create_and_upload_thumbnail(
+            os.path.basename(filename)
+        )
+        logger.debug('Task %s complete.', self.request.id)
+    except Exception as ex:
+        logger.warning(
+            'Caught exception running do_thumbnail(%s): %s',
+            filename, ex, exc_info=True
+        )
+        self.retry(countdown=2 ** self.request.retries)
+
+
+@app.task(
+    bind=True, name='newvideo_ready', max_retries=4, acks_late=True,
+    task_time_limit=30, ignore_result=True
+)
+def newvideo_ready(self, filename, event_text):
+    """
+    Triggered when a new video has been added to the DB and the thumbnail
+    has been generated. Entrypoint for notifications and other event handling
+    for new videos.
+    """
+    logger.debug(
+        'Running task newvideo_ready() id=%s retries=%d filename=%s '
+        'event_text=%s', self.request.id, self.request.retries, filename,
+        event_text
+    )
+    try:
+        logger.warning(
+            'NOT IMPLEMENTED: task %s newvideo_ready(%s, %s)', self.request.id,
+            filename, event_text
+        )
+    except Exception as ex:
+        logger.warning(
+            'Caught exception running newvideo_ready(%s, %s): %s',
+            filename, event_text, ex, exc_info=True
+        )
+        self.retry(countdown=2 ** self.request.retries)
+
+
+@app.task(
+    bind=True, name='newevent_ready', max_retries=4, acks_late=True,
+    task_time_limit=30, ignore_result=True
+)
+def newevent_ready(self, event_text):
+    """
+    Triggered when a new event has been added to the DB. Entrypoint for
+    notifications and other event handling for new events.
+    """
+    logger.debug(
+        'Running task newevent_ready() id=%s retries=%d event_text=%s',
+        self.request.id, self.request.retries, event_text
+    )
+    try:
+        logger.warning(
+            'NOT IMPLEMENTED: task %s newevent_ready(%s)', self.request.id,
+            event_text
+        )
+    except Exception as ex:
+        logger.warning(
+            'Caught exception running newevent_ready(%s): %s',
+            event_text, ex, exc_info=True
         )
         self.retry(countdown=2 ** self.request.retries)

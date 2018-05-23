@@ -50,6 +50,11 @@ from motion_pipeline.handler_actions import FILE_UPLOAD_ACTIONS
 from motion_pipeline.utils import autoremoving_tempfile
 from motion_pipeline.s3connection import get_s3_bucket
 
+try:
+    from anyjson import deserialize
+except ImportError:
+    from json import loads as deserialize
+
 logger = get_task_logger(__name__)
 
 atexit.register(cleanup_db)
@@ -89,6 +94,9 @@ class MotionTaskProcessor(object):
         _date = datetime.strptime(
             kwargs['call_date'], '%Y-%m-%d %H:%M:%S'
         )
+        _call_date = datetime.strptime(
+            kwargs['handler_call_time'], '%Y-%m-%d %H:%M:%S'
+        )
         db_session.add(MotionEvent(
             text_event=kwargs['text_event'],
             date=_date,
@@ -106,6 +114,7 @@ class MotionTaskProcessor(object):
             motion_height=kwargs['motion_height'],
             motion_center_x=kwargs['motion_center_x'],
             motion_center_y=kwargs['motion_center_y'],
+            handler_call_start_datetime=_call_date
         ))
         db_session.commit()
         from motion_pipeline.celerytasks.tasks import newevent_ready
@@ -113,12 +122,16 @@ class MotionTaskProcessor(object):
 
     def _handle_event_end(self, **kwargs):
         e = db_session.query(MotionEvent).get(kwargs['text_event'])
+        _call_date = datetime.strptime(
+            kwargs['handler_call_time'], '%Y-%m-%d %H:%M:%S'
+        )
         if e is not None:
             logger.info(
                 'Writing event_end to DB for existing event %s',
                 kwargs['text_event']
             )
             e.is_finished = True
+            e.handler_call_end_datetime = _call_date
             db_session.commit()
             return
         # else we have an event_end without a matching event_start
@@ -146,7 +159,8 @@ class MotionTaskProcessor(object):
             motion_height=kwargs['motion_height'],
             motion_center_x=kwargs['motion_center_x'],
             motion_center_y=kwargs['motion_center_y'],
-            is_finished=True
+            is_finished=True,
+            handler_call_end_datetime=_call_date
         )
         db_session.add(e)
         db_session.commit()
@@ -157,6 +171,9 @@ class MotionTaskProcessor(object):
         )
         _date = datetime.strptime(
             kwargs['call_date'], '%Y-%m-%d %H:%M:%S'
+        )
+        _call_date = datetime.strptime(
+            kwargs['handler_call_time'], '%Y-%m-%d %H:%M:%S'
         )
         db_session.add(Video(
             filename=os.path.basename(kwargs['filename']),
@@ -169,7 +186,8 @@ class MotionTaskProcessor(object):
             file_type=kwargs['filetype'],
             threshold=kwargs['threshold'],
             despeckle_labels=kwargs['despeckle_labels'],
-            fps=kwargs['fps']
+            fps=kwargs['fps'],
+            handler_call_datetime=_call_date
         ))
         db_session.commit()
         from motion_pipeline.celerytasks.tasks import do_thumbnail
@@ -188,8 +206,17 @@ class MotionTaskProcessor(object):
         thumbnail_name = '%s.jpg' % filename
         logger.info('Generating still thumbnail of second frame of %s to: %s',
                     filename, thumbnail_name)
+        video_length = None
         with autoremoving_tempfile(suffix='.jpg') as imgpath:
             with autoremoving_tempfile(suffix='.jpg') as framepath:
+                # get the length of the video
+                cmd = [
+                    'ffprobe', '-show_format', '-of', 'json', '-i', vid_path
+                ]
+                logger.debug('Running: %s', ' '.join(cmd))
+                res = run(cmd, stdout=PIPE, timeout=120)
+                ffprobe_json = deserialize(res.stdout.strip())
+                video_length = float(ffprobe_json['format']['duration'])
                 # Extract the second frame from the video
                 cmd = [
                     'ffmpeg', '-y', '-ss', '00:00:00.2',
@@ -224,6 +251,7 @@ class MotionTaskProcessor(object):
         )
         # update the DB with the thumbnail name
         video.thumbnail_name = thumbnail_name
+        video.length_sec = video_length
         db_session.commit()
         from motion_pipeline.celerytasks.tasks import newvideo_ready
         newvideo_ready.delay(video.filename, video.text_event)

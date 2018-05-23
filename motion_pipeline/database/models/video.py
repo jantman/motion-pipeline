@@ -37,7 +37,7 @@ Jason Antman <jason@jasonantman.com> <http://www.jasonantman.com>
 
 import logging
 from sqlalchemy import (
-    Column, Integer, String, DateTime, Boolean, ForeignKey
+    Column, Integer, String, DateTime, Boolean, ForeignKey, Numeric
 )
 from sqlalchemy.orm import relationship
 from motion_pipeline.database.models.base import Base, ModelAsDict
@@ -63,6 +63,9 @@ class Video(Base, ModelAsDict):
 
     #: date of the upload
     date = Column(DateTime)
+
+    #: datetime when motion called motion_handler.py for on_movie_end
+    handler_call_datetime = Column(DateTime)
 
     #: ID of the event; this resets every time motion restarts
     event_id = Column(Integer)
@@ -93,6 +96,9 @@ class Video(Base, ModelAsDict):
 
     #: The current FPS rate of the camera
     fps = Column(Integer)
+
+    #: The length of the video in seconds
+    length_sec = Column(Numeric)
 
     #: Whether or not the file has been viewed yet
     is_viewed = Column(Boolean, default=False)

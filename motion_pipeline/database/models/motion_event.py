@@ -62,6 +62,12 @@ class MotionEvent(Base, ModelAsDict):
     #: date of the upload
     date = Column(DateTime)
 
+    #: datetime when motion called motion_handler.py for on_event_start
+    handler_call_start_datetime = Column(DateTime)
+
+    #: datetime when motion called motion_handler.py for on_event_end
+    handler_call_end_datetime = Column(DateTime)
+
     #: ID of the event; this resets every time motion restarts
     event_id = Column(Integer)
 

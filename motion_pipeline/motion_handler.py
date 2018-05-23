@@ -295,10 +295,11 @@ def main(args):
         'threshold': args.threshold,
         'despeckle_labels': args.despeckle_labels,
         'fps': args.fps,
-        'host': args.host
+        'host': args.host,
+        'handler_call_time': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     }
     if arg_dict.get('text_event', None) is None:
-        arg_dict['text_event'] = datetime.now().strftime('%Y%m%d%H%M%S')
+        arg_dict['text_event'] = arg_dict['handler_call_time']
         logger.debug('set text_event to: %s', arg_dict['text_event'])
     save_fname = arg_dict['filename']
     if save_fname is None:

@@ -1,0 +1,74 @@
+<html>
+<head>
+  <title>Index</title>
+  <style>
+  #container { width: 100%; }
+  #left { width: 49%; float: left; }
+  #right { width: 49%; float: left; }
+  img { display: block; margin-left: auto; margin-right: auto; }
+  p { width: 100%; text-align: center; }
+  table { margin-left: auto; margin-right: auto; }
+  td { text-align: center; }
+  </style>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <script>
+  function doMove(x, y) {
+    $.ajax({
+      url: "/cam1/cgi-bin/ptz.cgi?action=start&channel=1&code=Position&arg1=" + x + "&arg2=" + y + "&arg3=0",
+      password: "passw0rd",
+      username: "admin"
+    })
+    .fail(function(jqXHR, textStatus, errorThrown) {
+      alert("Ajax call to move failed: " + textStatus + " : " + errorThrown)
+    });
+  }
+  function getpos() {
+    $.ajax({
+      url: "/cam1/cgi-bin/ptz.cgi?action=getStatus&channel=1",
+      password: "passw0rd",
+      username: "admin"
+    })
+    .done(function(data) {
+      var x = null;
+      var y = null;
+      var tmp;
+      var lines = data.split("\n");
+      for(var line in lines) {
+        tmp = lines[line].split("=");
+        console.log("=" + tmp[0] + "=");
+        if(tmp[0] == "status.Postion[0]") { x = parseFloat(tmp[1]); }
+        if(tmp[0] == "status.Postion[1]") { y = parseFloat(tmp[1]); }
+      }
+      if(x === null || y === null) {
+        alert("Error: unable to parse position!");
+        return null;
+      }
+      alert([x, y]);
+    })
+    .fail(function(jqXHR, textStatus, errorThrown) {
+      alert("Ajax call to get position failed: " + textStatus + " : " + errorThrown)
+    });
+  }
+  </script>
+</head>
+<body>
+  <div id="container">
+    <div id="left">
+      <img src="/cam1/cgi-bin/mjpg/video.cgi?channel=1&subtype=1" />
+      <!-- <img src="http://via.placeholder.com/640x480" /> -->
+      <p><a href="/cam1/cgi-bin/snapshot.cgi" target="_blank">Full Size (still)</a></p>
+      <table>
+        <tr><td>&nbsp;</td><td><a href="#" onclick="doMove(0, -1500)">&uarr;</a><br /><a href="#" onclick="doMove(0, -3000)">&uuarr;</a></td><td>&nbsp;</td></tr>
+        <tr><td><a href="#" onclick="doMove(-1500, 0)">&larr;</a><a href="#" onclick="doMove(-3000, 0)">&llarr;</a></td><td>&nbsp;</td><td><a href="#" onclick="doMove(3000, 0)">&rrarr;</a><a href="#" onclick="doMove(1500, 0)">&rarr;</a></td></tr>
+        <tr><td>&nbsp;</td><td><a href="#" onclick="doMove(0, 3000)">&ddarr;</a><br /><a href="#" onclick="doMove(0, 1500)">&darr;</a></td><td>&nbsp;</td></tr>
+      </table>
+    <a href="#" onclick="getpos()">Get Position</a>
+    </div> <!-- /left -->
+    <div id="right">
+      <img src="/cam2/cgi-bin/mjpg/video.cgi?channel=1&subtype=1" />
+      <!-- <img src="http://via.placeholder.com/640x480" /> -->
+      <p><a href="/cam2/cgi-bin/snapshot.cgi" target="_blank">Full Size (still)</a></p>
+    </div> <!-- /right -->
+  </div> <!-- /container -->
+</body>
+</html>

@@ -67,19 +67,22 @@ class MotionTaskProcessor(object):
 
     def process(self, *args, **kwargs):
         logger.info('Picked up task: args=%s kwargs=%s', args, kwargs)
-        if args[0] in FILE_UPLOAD_ACTIONS:
-            self._handle_file_upload(**kwargs)
-        elif args[0] == 'event_start':
-            self._handle_event_start(**kwargs)
-        elif args[0] == 'event_end':
-            self._handle_event_end(**kwargs)
-        elif args[0] == 'heartbeat':
-            logger.warning('Ignoring heartbeat task: %s', kwargs)
-        else:
-            logger.error(
-                'Discarding task with unknown action "%s": %s',
-                args[0], kwargs
-            )
+        try:
+            if args[0] in FILE_UPLOAD_ACTIONS:
+                self._handle_file_upload(**kwargs)
+            elif args[0] == 'event_start':
+                self._handle_event_start(**kwargs)
+            elif args[0] == 'event_end':
+                self._handle_event_end(**kwargs)
+            elif args[0] == 'heartbeat':
+                logger.warning('Ignoring heartbeat task: %s', kwargs)
+            else:
+                logger.error(
+                    'Discarding task with unknown action "%s": %s',
+                    args[0], kwargs
+                )
+        finally:
+            cleanup_db()
 
     def _handle_event_start(self, **kwargs):
         logger.info('Writing event_start to DB')

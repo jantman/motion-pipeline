@@ -54,7 +54,9 @@ requires = [
 
 # Requirements for everything beyond that...
 extras_require = {
-    'web': [],
+    'web': [
+        'Flask>=1.0.0, <2.0.0'
+    ],
     'worker': [
         'PyMySQL>=0.8.0, <1.0.0',
         'SQLAlchemy-Utc>=0.10.0, <1.0.0',

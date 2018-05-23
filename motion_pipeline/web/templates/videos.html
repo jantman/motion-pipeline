@@ -1,0 +1,86 @@
+{% macro eventrow(event) -%}
+          <tr>
+              <td>
+                  {% if event.upload is none %}
+                      {% if not event.is_finished %}
+                      <strong>IN-PROGRESS</strong>
+                      {% else %}
+                      ERROR: No upload for {{ event.upload.filename }}
+                      {% endif %}
+                  {% else %}
+                      <a href="/uploads/{{ event.upload.filename }}">
+                      {% if event.upload is none or event.upload.thumbnail_name is none %}
+                      {% set imgloc = "/static/640x480.png" %}
+                      {% else %}
+                      {% set imgloc = "/uploads/" + event.upload.thumbnail_name %}
+                      {% endif %}
+                      <img src="{{ imgloc }}" width="320" height="240" /><br />
+                      {{ event.upload.filename }}
+                      </a>
+                  {% endif %}
+              </td>
+              <td>{{ event.date }}</td>
+              <td>{{ event.cam_name }}</td>
+              <td>{{ event.changed_pixels }} / {{ event.threshold }}</td>
+              <td>{{ event.motion_width }} x {{ event.motion_height }}</td>
+              <td>{{ event.noise }}</td>
+              <td>{{ event.despeckle_labels }}</td>
+              <td>{{ event.fps }}</td>
+              <td>
+                  {{ event.text_event }}<br />
+                  ID={{ event.event_id }}<br />
+                  frame={{ event.frame_num }}<br />
+                  host={{ event.host }}
+              </td>
+              <td><a href="/simple/archive/{{ event.upload.filename }}">Archive</a></td>
+          </tr>
+{%- endmacro %}
+<html>
+<head>
+  <title>Index</title>
+  <style>
+  #header { width: 100%; border: 1px solid black; text-align: center; margin-bottom: 2em; }
+  img { display: block; margin-left: auto; margin-right: auto; }
+  p { width: 100%; text-align: center; }
+  table {
+      border-collapse: collapse;
+      margin-left: auto;
+      margin-right: auto;
+      width: 100%;
+  }
+  table, th, td {
+      border: 1px solid black;
+      text-align: center;
+  }
+  </style>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <script>
+  </script>
+</head>
+<body>
+  <div id="header">
+    <a href="/simple/">Index</a> - <a href="/simple/live">Live</a>
+  </div>
+  <table>
+      <thead>
+          <tr>
+              <th>&nbsp;</th>
+              <th>Date/Time</th>
+              <th>Camera</th>
+              <th>Changed / Threshold</th>
+              <th>Motion Width x Height</th>
+              <th>Noise</th>
+              <th>Despeckle Labels</th>
+              <th>FPS</th>
+              <th>Event</th>
+              <th>Actions</th>
+          </tr>
+      </thead>
+      <tbody>
+{% for event in events %}
+{{ eventrow(event) }}
+{% endfor %}
+      </tbody>
+  </table>
+</body>
+</html>

@@ -45,12 +45,12 @@ from motion_pipeline.database.models.base import Base, ModelAsDict
 logger = logging.getLogger(__name__)
 
 
-class Upload(Base, ModelAsDict):
+class Video(Base, ModelAsDict):
     """
-    Class that describes a file upload from motion
+    Class that describes a video file upload from motion
     """
 
-    __tablename__ = 'uploads'
+    __tablename__ = 'videos'
     __table_args__ = (
         {'mysql_engine': 'InnoDB'}
     )
@@ -80,7 +80,7 @@ class Upload(Base, ModelAsDict):
     #: "%t-%Y%m%d%H%M%S-%q-%v"
     text_event = Column(String(255), ForeignKey('motion_events.text_event'))
 
-    event = relationship('MotionEvent', back_populates='upload', uselist=False)
+    event = relationship('MotionEvent', back_populates='video', uselist=False)
 
     #: The file type
     file_type = Column(Integer)

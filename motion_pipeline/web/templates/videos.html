@@ -1,21 +1,21 @@
 {% macro eventrow(event) -%}
           <tr>
               <td>
-                  {% if event.upload is none %}
+                  {% if event.video is none %}
                       {% if not event.is_finished %}
                       <strong>IN-PROGRESS</strong>
                       {% else %}
-                      ERROR: No upload for {{ event.upload.filename }}
+                      ERROR: No video for {{ event.video.filename }}
                       {% endif %}
                   {% else %}
-                      <a href="/simple/videos/{{ event.upload.filename }}">
-                      {% if event.upload is none or event.upload.thumbnail_name is none %}
+                      <a href="/simple/videos/{{ event.video.filename }}">
+                      {% if event.video is none or event.video.thumbnail_name is none %}
                       {% set imgloc = "/static/640x480.png" %}
                       {% else %}
-                      {% set imgloc = "/uploads/" + event.upload.thumbnail_name %}
+                      {% set imgloc = "/uploads/" + event.video.thumbnail_name %}
                       {% endif %}
                       <img src="{{ imgloc }}" width="320" height="240" /><br />
-                      {{ event.upload.filename }}
+                      {{ event.video.filename }}
                       </a>
                   {% endif %}
               </td>
@@ -32,7 +32,7 @@
                   frame={{ event.frame_num }}<br />
                   host={{ event.host }}
               </td>
-              <td><a href="/simple/archive/{{ event.upload.filename }}">Archive</a></td>
+              <td><a href="/simple/archive/{{ event.video.filename }}">Archive</a></td>
           </tr>
 {%- endmacro %}
 <html>

@@ -45,7 +45,7 @@ from PIL import Image
 
 import motion_pipeline.settings as settings
 from motion_pipeline.database.db import db_session, cleanup_db
-from motion_pipeline.database.models import Upload, MotionEvent
+from motion_pipeline.database.models import Video, MotionEvent
 from motion_pipeline.handler_actions import FILE_UPLOAD_ACTIONS
 from motion_pipeline.utils import autoremoving_tempfile
 from motion_pipeline.s3connection import get_s3_bucket
@@ -158,7 +158,7 @@ class MotionTaskProcessor(object):
         _date = datetime.strptime(
             kwargs['call_date'], '%Y-%m-%d %H:%M:%S'
         )
-        db_session.add(Upload(
+        db_session.add(Video(
             filename=os.path.basename(kwargs['filename']),
             date=_date,
             event_id=kwargs['event_id'],
@@ -180,8 +180,8 @@ class MotionTaskProcessor(object):
             raise NotImplementedError(
                 'ERROR: Downloading new videos from S3 not yet implemented!'
             )
-        upload = db_session.query(Upload).get(filename)
-        assert upload is not None
+        video = db_session.query(Video).get(filename)
+        assert video is not None
         s3 = get_s3_bucket(settings, tasklogger=logger)
         vid_path = os.path.join(settings.MINIO_LOCAL_MOUNTPOINT, filename)
         logger.debug('Handling new video at: %s', vid_path)
@@ -223,7 +223,7 @@ class MotionTaskProcessor(object):
             'Still thumbnail of %s uploaded to S3 at: %s', filename, key
         )
         # update the DB with the thumbnail name
-        upload.thumbnail_name = thumbnail_name
+        video.thumbnail_name = thumbnail_name
         db_session.commit()
         from motion_pipeline.celerytasks.tasks import newvideo_ready
-        newvideo_ready.delay(upload.filename, upload.text_event)
+        newvideo_ready.delay(video.filename, video.text_event)

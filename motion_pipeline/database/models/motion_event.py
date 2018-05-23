@@ -104,7 +104,7 @@ class MotionEvent(Base, ModelAsDict):
     #: The Y center of the motion area
     motion_center_y = Column(Integer)
 
-    upload = relationship('Upload', back_populates='event', uselist=False)
+    video = relationship('Video', back_populates='event', uselist=False)
 
     #: Whether or not the file has been viewed yet
     is_finished = Column(Boolean, default=False)

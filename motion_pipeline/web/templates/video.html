@@ -1,6 +1,6 @@
 <html>
 <head>
-  <title>Video - {{ upload.filename }}</title>
+  <title>Video - {{ video.filename }}</title>
   <style>
   body { margin: 0; overflow: hidden; }
   #navheader { width: 98%; text-align: left; padding-left: 2em; top: 0; left: 0; margin: 0; }
@@ -17,35 +17,35 @@
 </head>
 <body>
   <div id="navheader">
-    <a href="/simple/">Index</a> - <a href="/simple/live">Live</a> - <a href="/simple/videos">Back to Videos</a> - <a href="/simple/archive/{{ upload.filename }}"><button id="archive">Archive</button></a>
+    <a href="/simple/">Index</a> - <a href="/simple/live">Live</a> - <a href="/simple/videos">Back to Videos</a> - <a href="/simple/archive/{{ video.filename }}"><button id="archive">Archive</button></a>
   </div>
   <div id="videoinfo">
     <table>
       <tbody>
         <tr>
-          <td><strong>Filename:</strong> {{ upload.filename }}</td>
-          <td><strong>Camera:</strong> {{ upload.cam_name }} ({{ upload.cam_num }}) on {{ upload.host }}</td>
-          <td><strong>Date:</strong> {{ upload.date }}</td>
-          <td><strong>Event:</strong> {{ upload.text_event }} ({{ upload.event_id }})</td>
+          <td><strong>Filename:</strong> {{ video.filename }}</td>
+          <td><strong>Camera:</strong> {{ video.cam_name }} ({{ video.cam_num }}) on {{ video.host }}</td>
+          <td><strong>Date:</strong> {{ video.date }}</td>
+          <td><strong>Event:</strong> {{ video.text_event }} ({{ video.event_id }})</td>
         </tr>
         <tr>
-          <td><strong>Changed Pixels: </strong> {{ upload.event.changed_pixels }}</td>
-          <td><strong>Threshold:</strong> {{ upload.event.threshold }}</td>
-          <td><strong>Motion Width x Height:</strong> {{ upload.event.motion_width}} x {{ upload.event.motion_height }}</td>
-          <td><strong>Motion Center:</strong> X={{ upload.event.motion_center_x }} Y={{ upload.event.motion_center_y }}</td>
+          <td><strong>Changed Pixels: </strong> {{ video.event.changed_pixels }}</td>
+          <td><strong>Threshold:</strong> {{ video.event.threshold }}</td>
+          <td><strong>Motion Width x Height:</strong> {{ video.event.motion_width}} x {{ video.event.motion_height }}</td>
+          <td><strong>Motion Center:</strong> X={{ video.event.motion_center_x }} Y={{ video.event.motion_center_y }}</td>
         </tr>
         <tr>
-          <td><strong>FPS:</strong> {{ upload.event.fps }}</td>
-          <td><strong>Noise:</strong> {{ upload.event.noise }}</td>
-          <td><strong>Despeckle Labels:</strong> {{ upload.event.despeckle_labels }}</td>
+          <td><strong>FPS:</strong> {{ video.event.fps }}</td>
+          <td><strong>Noise:</strong> {{ video.event.noise }}</td>
+          <td><strong>Despeckle Labels:</strong> {{ video.event.despeckle_labels }}</td>
           <td>&nbsp;</td>
         </tr>
       </tbody>
     </table>
   </div>
   <div id="videodiv" align="center">
-    <video id="my-video" class="video-js" controls preload="auto" poster="/uploads/{{ upload.thumbnail_name }}" data-setup='{}' align="center">
-      <source src="/uploads/{{ upload.filename }}" type='video/webm'>
+    <video id="my-video" class="video-js" controls preload="auto" poster="/uploads/{{ video.thumbnail_name }}" data-setup='{}' align="center">
+      <source src="/uploads/{{ video.filename }}" type='video/webm'>
       <p class="vjs-no-js">To view this video please enable JavaScript, and consider upgrading to a web browser that <a href="http://videojs.com/html5-video-support/" target="_blank">supports HTML5 video</a></p>
     </video>
   </div>

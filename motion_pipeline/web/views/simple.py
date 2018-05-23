@@ -44,7 +44,7 @@ from sqlalchemy import asc
 from motion_pipeline.web.app import app
 from motion_pipeline.web.utils import proxy_aware_redirect
 from motion_pipeline.database.db import db_session
-from motion_pipeline.database.models import Upload, MotionEvent
+from motion_pipeline.database.models import Video, MotionEvent
 from motion_pipeline import settings
 
 logger = logging.getLogger(__name__)
@@ -95,9 +95,9 @@ class SimpleOneVideoView(MethodView):
     """
 
     def get(self, video_filename):
-        file = db_session.query(Upload).get(video_filename)
+        file = db_session.query(Video).get(video_filename)
         return render_template(
-            'video.html', upload=file
+            'video.html', video=file
         )
 
 
@@ -116,7 +116,7 @@ class ArchiveView(MethodView):
     """
 
     def get(self, path):
-        upload = db_session.query(Upload).get(path)
+        upload = db_session.query(Video).get(path)
         assert upload is not None
         logger.info('Archiving: %s', path)
         upload.is_archived = True

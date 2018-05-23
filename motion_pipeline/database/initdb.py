@@ -45,7 +45,7 @@ logger = logging.getLogger(__name__)
 
 
 def parse_args():
-    p = argparse.ArgumentParser(description='Load initial data to DB')
+    p = argparse.ArgumentParser(description='Initialize database schema')
     p.add_argument('-v', '--verbose', dest='verbose', action='count', default=0,
                    help='verbose output. specify twice for debug-level output.')
     args = p.parse_args()

@@ -36,6 +36,17 @@ Testing is done via `pytest <http://pytest.org/latest/>`_, driven by `tox <http:
 
 * If you want to pass additional arguments to pytest, add them to the tox command line after "--". i.e., for verbose pytext output on py27 tests: ``tox -e py27 -- -v``
 
+Alembic Database Migrations
+---------------------------
+
+This project uses `Alembic <http://alembic.zzzcomputing.com/en/latest/index.html>`_
+for DB migrations:
+
+* To generate migrations, run ``alembic -c motion_pipeline/alembic/alembic.ini revision --autogenerate -m "message"`` and examine/edit then commit the resulting file(s). This must be run *before* the model changes are applied to the DB. If adding new models, make sure to import the model class in ``models/__init__.py``.
+* To apply migrations, run ``alembic -c motion_pipeline/alembic/alembic.ini upgrade head``.
+* To see the current DB version, run ``alembic -c motion_pipeline/alembic/alembic.ini current``.
+* To see migration history, run ``alembic -c motion_pipeline/alembic/alembic.ini history``.
+
 Release Checklist
 -----------------
 

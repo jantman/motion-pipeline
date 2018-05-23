@@ -38,13 +38,20 @@ Jason Antman <jason@jasonantman.com> <http://www.jasonantman.com>
 
 import logging
 import os
+from copy import deepcopy
 import warnings
 import motion_pipeline.settings as settings
+import pkg_resources
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 from pymysql.err import Warning
+from alembic.config import Config
+from alembic.script import ScriptDirectory
+from alembic.runtime.environment import EnvironmentContext
+from alembic import command
 
+from motion_pipeline.utils import in_directory
 
 logger = logging.getLogger(__name__)
 
@@ -89,13 +96,71 @@ from motion_pipeline.database.models.base import Base  # noqa
 Base.query = db_session.query_property()
 
 
+def _alembic_get_current_rev(config, script):
+    """
+    Works sorta like alembic.command.current
+
+    :param config: alembic Config
+    :return: current revision
+    :rtype: str
+    """
+    config._curr_rev = None
+
+    def display_version(rev, _):
+        for rev in script.get_all_current(rev):
+            config._curr_rev = rev.cmd_format(False)
+        return []
+
+    with EnvironmentContext(
+        config,
+        script,
+        fn=display_version
+    ):
+        script.run_env()
+    if config._curr_rev is not None and ' ' in config._curr_rev:
+        config._curr_rev = config._curr_rev.strip().split(' ')[0]
+    return config._curr_rev
+
+
 def init_db():
     """
     Initialize the database; call
     :py:meth:`sqlalchemy.schema.MetaData.create_all` on the metadata object.
     """
     logger.debug('Initializing database')
-    Base.metadata.create_all(engine)
+    # import all modules here that might define models so that
+    # they will be registered properly on the metadata.  Otherwise
+    # you will have to import them first before calling init_db()
+    alembic_ini = pkg_resources.resource_filename(
+        pkg_resources.Requirement.parse('motion_pipeline'),
+        'motion_pipeline/alembic/alembic.ini'
+    )
+    topdir = os.path.abspath(
+        os.path.join(os.path.dirname(alembic_ini), '..', '..')
+    )
+    logger.debug('Alembic configuration: %s', alembic_ini)
+    with in_directory(topdir):
+        alembic_config = Config(alembic_ini)
+        script = ScriptDirectory.from_config(alembic_config)
+        curr_rev = _alembic_get_current_rev(alembic_config, script)
+        head_rev = script.get_revision("head").revision
+        if curr_rev is None:
+            # alembic not initialized at all; stamp with current version
+            logger.warning(
+                'Alembic not setup; creating all models and stamping'
+            )
+            logger.debug('Creating all models')
+            Base.metadata.create_all(engine)
+            command.stamp(alembic_config, "head")
+            logger.debug("DB stamped at %s", head_rev)
+        elif curr_rev != head_rev:
+            logger.warning("Alembic head is %s but this DB is at %s; "
+                           "running migrations", head_rev, curr_rev)
+            command.upgrade(alembic_config, "head")
+            logger.info("Migrations complete")
+        else:
+            logger.debug('Alembic is at the correct head version (%s)',
+                         curr_rev)
     logger.debug('Done initializing DB')
 
 
@@ -108,3 +173,58 @@ def cleanup_db():
     """
     logger.debug('Closing DB session')
     db_session.remove()
+
+
+def upsert_record(model_class, key_fields, **kwargs):
+    """
+    Upsert a record in the database.
+
+    ``key_fields`` is either a string primary key field name (a key in the
+    ``kwargs`` dict) or a list or tuple of string primary key field names, for
+    compound keys.
+
+    If a record can be found matching these keys, it will be updated and
+    committed. If not, a new one will be inserted. Either way, the record is
+    returned.
+
+    :py:meth:`sqlalchemy.orm.session.Session.commit` is **NOT** called.
+
+    :param model_class: the class of model to insert/update
+    :type model_class: motion_pipeline.database.models.base.ModelAsDict
+    :param key_fields: The field name(s) (keys in ``kwargs``) that make up the
+      primary key. This can be a single string, or a list or tuple of strings
+      for compound keys. The values for these key fields MUST be included in
+      ``kwargs``.
+    :param kwargs: arguments to provide to the model class constructor, or to
+      update if there is an existing record matching the key.
+    :type kwargs: dict
+    :return: inserted or updated record; type is an instance of ``model_class``
+    """
+    args = {}
+    for k, v in kwargs.items():
+        if isinstance(v, Base):
+            args[k] = v
+        else:
+            args[k] = deepcopy(v)
+    pkey = None
+    if isinstance(key_fields, type('')):
+        pkey = args[key_fields]
+        del args[key_fields]
+    else:
+        pkey = []
+        for k in key_fields:
+            pkey.append(args[k])
+            del args[k]
+        pkey = tuple(pkey)
+    logger.info('Upserting %s key=%s: %s', model_class, pkey, kwargs)
+    res = db_session.query(model_class).get(pkey)
+    if res is None:
+        # not in DB yet; insert
+        logger.debug('INSERTing (no existing record found)')
+        o = model_class(**kwargs)
+        db_session.add(o)
+        return o
+    logger.debug('Matching record exists; updating')
+    for k, v in args.items():
+        setattr(res, k, v)
+    return res

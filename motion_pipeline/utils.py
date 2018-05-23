@@ -36,9 +36,28 @@ Jason Antman <jason@jasonantman.com> <http://www.jasonantman.com>
 """
 
 import os
+import logging
 from datetime import datetime
 from tempfile import mkstemp
 from contextlib import contextmanager
+
+logger = logging.getLogger(__name__)
+
+
+def fix_werkzeug_logger():
+    """
+    Remove the werkzeug logger StreamHandler (call from ``app.py``).
+
+    With Werkzeug at least as of 0.12.1, werkzeug._internal._log sets up its own
+    StreamHandler if logging isn't already configured. Because we're using
+    the ``flask`` command line wrapper, that will ALWAYS be imported (and
+    executed) before we can set up our own logger. As a result, to fix the
+    duplicate log messages, we have to go back and remove that StreamHandler.
+    """
+    wlog = logging.getLogger('werkzeug')
+    logger.info('Removing handlers from "werkzeug" logger')
+    for h in wlog.handlers:
+        wlog.removeHandler(h)
 
 
 def dtnow():
@@ -59,3 +78,11 @@ def autoremoving_tempfile(suffix=None):
         yield path
     finally:
         os.unlink(path)
+
+
+@contextmanager
+def in_directory(path):
+    pwd = os.getcwd()
+    os.chdir(path)
+    yield os.path.abspath(path)
+    os.chdir(pwd)

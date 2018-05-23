@@ -81,7 +81,7 @@ class SimpleVideosView(MethodView):
         events = db_session.query(
             MotionEvent
         ).filter(
-            MotionEvent.upload.has(is_archived=False)
+            MotionEvent.video.has(is_archived=False)
         ).order_by(asc(MotionEvent.date)).all()
         return render_template(
             'videos.html', events=events

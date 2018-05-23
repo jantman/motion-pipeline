@@ -88,6 +88,19 @@ class SimpleVideosView(MethodView):
         )
 
 
+class SimpleOneVideoView(MethodView):
+    """
+    Render the GET /simple/videos/<filename> view using the
+    ``video.html`` template.
+    """
+
+    def get(self, video_filename):
+        file = db_session.query(Upload).get(video_filename)
+        return render_template(
+            'video.html', upload=file
+        )
+
+
 class UploadsView(MethodView):
     """
     Serve the uploads.
@@ -119,6 +132,10 @@ app.add_url_rule(
 )
 app.add_url_rule(
     '/simple/videos', view_func=SimpleVideosView.as_view('simple_videos_view')
+)
+app.add_url_rule(
+    '/simple/videos/<path:video_filename>',
+    view_func=SimpleOneVideoView.as_view('simple_one_video_view')
 )
 app.add_url_rule(
     '/uploads/<path:path>', view_func=UploadsView.as_view('uploads_view')

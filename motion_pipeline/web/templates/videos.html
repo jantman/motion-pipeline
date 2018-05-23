@@ -8,7 +8,7 @@
                       ERROR: No upload for {{ event.upload.filename }}
                       {% endif %}
                   {% else %}
-                      <a href="/uploads/{{ event.upload.filename }}">
+                      <a href="/simple/videos/{{ event.upload.filename }}">
                       {% if event.upload is none or event.upload.thumbnail_name is none %}
                       {% set imgloc = "/static/640x480.png" %}
                       {% else %}

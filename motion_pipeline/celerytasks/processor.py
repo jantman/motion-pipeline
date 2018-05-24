@@ -39,6 +39,7 @@ import os
 import atexit
 from datetime import datetime
 from subprocess import run, PIPE, STDOUT
+from decimal import Decimal, ROUND_UP
 
 from celery.utils.log import get_task_logger
 from PIL import Image
@@ -193,7 +194,9 @@ class MotionTaskProcessor(object):
         from motion_pipeline.celerytasks.tasks import do_thumbnail
         do_thumbnail.delay(os.path.basename(kwargs['filename']))
 
-    def create_and_upload_thumbnail(self, filename):
+    def create_and_upload_thumbnail(
+            self, filename, trigger_newvideo_ready=True
+    ):
         if settings.MINIO_LOCAL_MOUNTPOINT is None:
             raise NotImplementedError(
                 'ERROR: Downloading new videos from S3 not yet implemented!'
@@ -215,8 +218,14 @@ class MotionTaskProcessor(object):
                 ]
                 logger.debug('Running: %s', ' '.join(cmd))
                 res = run(cmd, stdout=PIPE, timeout=120)
-                ffprobe_json = deserialize(res.stdout.strip())
-                video_length = float(ffprobe_json['format']['duration'])
+                ffprobe_json = deserialize(res.stdout.strip().decode())
+                logger.debug(
+                    'ffprobe JSON lists video duration as: %s',
+                    ffprobe_json['format']['duration']
+                )
+                video_length = Decimal(
+                    ffprobe_json['format']['duration']
+                ).quantize(Decimal('.001'), rounding=ROUND_UP)
                 # Extract the second frame from the video
                 cmd = [
                     'ffmpeg', '-y', '-ss', '00:00:00.2',
@@ -253,5 +262,6 @@ class MotionTaskProcessor(object):
         video.thumbnail_name = thumbnail_name
         video.length_sec = video_length
         db_session.commit()
-        from motion_pipeline.celerytasks.tasks import newvideo_ready
-        newvideo_ready.delay(video.filename, video.text_event)
+        if trigger_newvideo_ready:
+            from motion_pipeline.celerytasks.tasks import newvideo_ready
+            newvideo_ready.delay(video.filename, video.text_event)

@@ -113,7 +113,8 @@ setup(
             'motion-handler=motion_pipeline.motion_handler:entrypoint',
             'motion-queuepeek=motion_pipeline.celerytasks.queuepeek:main',
             'motion-initdb=motion_pipeline.database.initdb:main',
-            'motion-dbshell=motion_pipeline.database.dbshell:main'
+            'motion-dbshell=motion_pipeline.database.dbshell:main',
+            'motion-db-fixup=motion_pipeline.database.fixup:main'
         ]
     },
     keywords="motion video frontend detection",

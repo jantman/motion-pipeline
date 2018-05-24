@@ -21,7 +21,7 @@ def upgrade():
     op.add_column('motion_events', sa.Column('handler_call_end_datetime', sa.DateTime(), nullable=True))
     op.add_column('motion_events', sa.Column('handler_call_start_datetime', sa.DateTime(), nullable=True))
     op.add_column('videos', sa.Column('handler_call_datetime', sa.DateTime(), nullable=True))
-    op.add_column('videos', sa.Column('length_sec', sa.Numeric(), nullable=True))
+    op.add_column('videos', sa.Column('length_sec', sa.Numeric(precision=10, scale=3), nullable=True))
     # ### end Alembic commands ###
 
 

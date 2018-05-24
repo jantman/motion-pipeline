@@ -76,7 +76,7 @@ def motion_ingest(self, *args, **kwargs):
     bind=True, name='do_thumbnail', max_retries=4, acks_late=True,
     task_time_limit=30, ignore_result=True
 )
-def do_thumbnail(self, filename):
+def do_thumbnail(self, filename, trigger_newvideo_ready=True):
     """
     Task to generate thumbnails for new pictures/movies from motion.
     """
@@ -87,7 +87,8 @@ def do_thumbnail(self, filename):
     try:
         from motion_pipeline.celerytasks.processor import MotionTaskProcessor
         MotionTaskProcessor(logger).create_and_upload_thumbnail(
-            os.path.basename(filename)
+            os.path.basename(filename),
+            trigger_newvideo_ready=trigger_newvideo_ready
         )
         logger.debug('Task %s complete.', self.request.id)
     except Exception as ex:

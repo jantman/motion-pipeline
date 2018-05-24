@@ -98,7 +98,7 @@ class Video(Base, ModelAsDict):
     fps = Column(Integer)
 
     #: The length of the video in seconds
-    length_sec = Column(Numeric)
+    length_sec = Column(Numeric(precision=10, scale=3))
 
     #: Whether or not the file has been viewed yet
     is_viewed = Column(Boolean, default=False)

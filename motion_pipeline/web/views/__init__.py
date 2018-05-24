@@ -36,3 +36,4 @@ Jason Antman <jason@jasonantman.com> <http://www.jasonantman.com>
 """
 
 from .simple import *
+from .detection_api import *

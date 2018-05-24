@@ -42,6 +42,7 @@ import code
 from motion_pipeline.database.db import init_db, cleanup_db, db_session
 from motion_pipeline.cliutils import set_log_debug, set_log_info
 from motion_pipeline.database.models import *  # noqa
+import motion_pipeline.settings as settings
 
 logger = logging.getLogger(__name__)
 

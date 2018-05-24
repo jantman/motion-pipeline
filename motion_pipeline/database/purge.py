@@ -37,19 +37,26 @@ Jason Antman <jason@jasonantman.com> <http://www.jasonantman.com>
 
 import argparse
 import logging
+from botocore.exceptions import ClientError
+from datetime import timedelta
 
 from sqlalchemy import or_
 
 from motion_pipeline.database.db import init_db, db_session
 from motion_pipeline.cliutils import set_log_debug, set_log_info
-from motion_pipeline.database.models import *
-from motion_pipeline.celerytasks.tasks import do_thumbnail
+from motion_pipeline.database.models import Video, MotionEvent
+import motion_pipeline.settings as settings
+from motion_pipeline.s3connection import get_s3_bucket
+from motion_pipeline.utils import dtnow
+
 
 logger = logging.getLogger(__name__)
 
 
 def parse_args():
-    p = argparse.ArgumentParser(description='Initialize database schema')
+    p = argparse.ArgumentParser(
+        description='Clean up archived recordings and database entries'
+    )
     p.add_argument('-v', '--verbose', dest='verbose', action='count', default=0,
                    help='verbose output. specify twice for debug-level output.')
     args = p.parse_args()
@@ -75,25 +82,67 @@ def main():
     logger.info('Initializing DB...')
     init_db()
     logger.info('Done initializing database')
-    fix_thumbs_and_video_length()
+    run_database_cleanup()
 
 
-def fix_thumbs_and_video_length():
-    videos = db_session.query(Video).filter(
-        or_(
-            Video.length_sec.__eq__(None),
-            Video.thumbnail_name.__eq__(None)
-        )
+def run_database_cleanup():
+    purge_archived_from_db()
+    purge_orphaned_events()
+
+
+def purge_archived_from_db():
+    bucket = get_s3_bucket(settings)
+    archived = db_session.query(Video).filter(
+        Video.is_archived.__eq__(True)
     ).all()
     logger.info(
-        'Found %d videos with thumbnail_name or length_sec null', len(videos)
+        'Found %d archived videos in database', len(archived)
     )
-    for v in videos:
-        logger.info(
-            'Enqueueing do_thumbnail(%s, trigger_newvideo_ready=False)',
-            v.filename
-        )
-        do_thumbnail.delay(v.filename, trigger_newvideo_ready=False)
+    for video in archived:
+        try:
+            remove_bucket_object(
+                bucket, settings.BUCKET_PREFIX + video.filename
+            )
+            if video.thumbnail_name is not None:
+                remove_bucket_object(
+                    bucket, settings.BUCKET_PREFIX + video.thumbnail_name
+                )
+        except Exception as ex:
+            logger.error(
+                'Excepting deleting archived video filename=%s: %s',
+                video.filename, ex, exc_info=True
+            )
+            continue
+        db_session.delete(video)
+        db_session.delete(video.event)
+        db_session.commit()
+
+
+def remove_bucket_object(bucket, key):
+    obj = bucket.Object(key)
+    try:
+        obj.content_length
+    except ClientError as ex:
+        if ex.response.get('Error', {}).get('Code', '0') == '404':
+            logger.info('Object %s already deleted', key)
+            return
+        raise
+    logger.info('Deleting Object %s', key)
+    obj.delete()
+    obj.wait_until_not_exists()
+
+
+def purge_orphaned_events():
+    orphaned = db_session.query(MotionEvent).filter(
+        MotionEvent.video.__eq__(None),
+        MotionEvent.date.__lt__(dtnow() - timedelta(days=1))
+    ).all()
+    logger.info(
+        'Found %d events older than one day with no video', len(orphaned)
+    )
+    for e in orphaned:
+        db_session.delete(e)
+        db_session.commit()
 
 
 if __name__ == "__main__":

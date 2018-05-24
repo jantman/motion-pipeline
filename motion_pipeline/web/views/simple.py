@@ -81,10 +81,16 @@ class SimpleVideosView(MethodView):
         events = db_session.query(
             MotionEvent
         ).filter(
-            MotionEvent.video.has(is_archived=False)
+            MotionEvent.video.has(is_archived=False),
+            MotionEvent.video.__ne__(None)
         ).order_by(asc(MotionEvent.date)).all()
+        unseen_count = db_session.query(
+            Video.filename
+        ).filter(
+            Video.is_archived.__eq__(False)
+        ).count()
         return render_template(
-            'videos.html', events=events
+            'videos.html', events=events, unseen_count=unseen_count
         )
 
 

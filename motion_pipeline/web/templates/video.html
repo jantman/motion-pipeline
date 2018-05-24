@@ -24,9 +24,9 @@
       <tbody>
         <tr>
           <td><strong>Filename:</strong> {{ video.filename }}</td>
+          <td><strong>Duration:</strong> {{ video.length_sec }}s</td>
           <td><strong>Camera:</strong> {{ video.cam_name }} ({{ video.cam_num }}) on {{ video.host }}</td>
-          <td><strong>Date:</strong> {{ video.date }}</td>
-          <td><strong>Event:</strong> {{ video.text_event }} ({{ video.event_id }})</td>
+          <td><strong>Date:</strong> {{ video.event.date }} to {{ video.date }} ({{ video.date - video.event.date }})</td>
         </tr>
         <tr>
           <td><strong>Changed Pixels: </strong> {{ video.event.changed_pixels }}</td>
@@ -38,7 +38,7 @@
           <td><strong>FPS:</strong> {{ video.event.fps }}</td>
           <td><strong>Noise:</strong> {{ video.event.noise }}</td>
           <td><strong>Despeckle Labels:</strong> {{ video.event.despeckle_labels }}</td>
-          <td>&nbsp;</td>
+          <td><strong>Event:</strong> {{ video.text_event }} ({{ video.event_id }})</td>
         </tr>
       </tbody>
     </table>

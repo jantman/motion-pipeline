@@ -59,7 +59,8 @@ extras_require = {
         'PyMySQL>=0.8.0, <1.0.0',
         'SQLAlchemy-Utc>=0.10.0, <1.0.0',
         'SQLAlchemy>=1.2.0, <1.3.0',
-        'alembic>=0.9.0, <1.0.0'
+        'alembic>=0.9.0, <1.0.0',
+        'humanize>=0.5.0, <1.0.0'
     ],
     'worker': [
         'PyMySQL>=0.8.0, <1.0.0',

@@ -38,8 +38,9 @@ Jason Antman <jason@jasonantman.com> <http://www.jasonantman.com>
 import logging
 from flask.views import MethodView
 from flask import render_template, send_from_directory, redirect, request
+from copy import deepcopy
 
-from sqlalchemy import asc
+from sqlalchemy import asc, func
 
 from motion_pipeline.web.app import app
 from motion_pipeline.web.utils import proxy_aware_redirect
@@ -56,8 +57,13 @@ class SimpleMainView(MethodView):
     """
 
     def get(self):
+        unseen_count = db_session.query(
+            Video.filename
+        ).filter(
+            Video.is_archived.__eq__(False)
+        ).count()
         return render_template(
-            'index.html'
+            'index.html', unseen_count=unseen_count
         )
 
 
@@ -67,8 +73,35 @@ class SimpleLiveView(MethodView):
     """
 
     def get(self):
+        unseen_counts = {
+            x[0]: x[1] for x in
+            db_session.query(
+                Video.cam_name, func.count(Video.cam_name)
+            ).filter(
+                Video.is_archived.__eq__(False)
+            ).group_by(Video.cam_name).all()
+        }
+        unseen_count = db_session.query(
+            Video.filename
+        ).filter(
+            Video.is_archived.__eq__(False)
+        ).count()
+        cams = {
+            x: deepcopy(settings.CAMERAS[x]) for x in settings.CAMERAS.keys()
+        }
+        for cname in cams.keys():
+            levt = db_session.query(MotionEvent).filter(
+                MotionEvent.cam_name.__eq__(cname)
+            ).order_by(MotionEvent.date.desc()).first()
+            cams[cname]['latest_event'] = levt
+            lvideo = db_session.query(Video).filter(
+                Video.cam_name.__eq__(cname)
+            ).order_by(Video.date.desc()).first()
+            cams[cname]['latest_video'] = lvideo
         return render_template(
-            'live.html'
+            'live.html', unseen_count=sum(unseen_counts.values()),
+            new_video_counts=unseen_counts, cameras=cams,
+            cam_names=sorted(settings.CAMERAS.keys())
         )
 
 

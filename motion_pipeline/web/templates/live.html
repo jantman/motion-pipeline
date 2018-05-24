@@ -1,74 +1,64 @@
+{% macro livecam(cam_name, cam) -%}
+<div class="left onehalf">
+  <div class="imgHeader">
+    <div class="onethird left center"><a href="{{ cam.snapshot_url }}">snapshot</a> | <a href="{{ cam.rstp_url }}">rstp</a></div>
+    <div class="onethird left center"><strong>{{ cam_name }}</strong></div>
+    <div class="onethird left center"><a href="/simple/videos">{{ new_video_counts[cam_name] }} unseen videos</a></div>
+  </div>
+  <img src="{{ cam.mjpeg_url }}" />
+  <div class="imgHeader">
+    <div class="twentypercent left">Detection: n/a</div>
+    <div class="eightypercent left">
+      <strong>Last Event:</strong>
+        {% if cam.latest_event.is_finished %}
+        {{ cam.latest_event.date|ago }}, {{ cam.latest_event.handler_call_end_datetime - cam.latest_event.handler_call_start_datetime }}s long
+        {% else %}
+        <strong>In Progress</strong>, started {{ cam.latest_event.handler_call_start_datetime|ago }}
+        {% endif %}
+      <br />
+      <strong>Last Recording:</strong> <a href="/simple/videos/{{ cam.latest_video.filename }}">{{ cam.latest_video.filename }}</a> {{ cam.latest_video.date|ago }}, {{ cam.latest_video.length_sec }}s
+    </div>
+  </div>
+  {% if cam.control_info is not none %}
+  <div class="imgHeader center">
+  <button id="tiltUp">Tilt Up</button><br />
+  <button id="panLeft">Pan Left</button><button id="panRight">Pan Right</button><br />
+  <button id="tiltDown">Tilt Down</button><br />
+  Presets: <select name="presets" id="presets"><option value="" selected></option><option value="1">1</option><option value="2">2</option></select>
+  <button id="gotoPreset">GoTo</button> <button id="setPreset">Set</button>
+  </div>
+  {% endif %}
+</div> <!-- /left -->
+{%- endmacro %}
 <html>
 <head>
-  <title>Index</title>
+  <title>Live View ({{ unseen_count }} new recordings)</title>
   <style>
+  #header { width: 100%; border: 1px solid black; text-align: center; margin-bottom: 2em; }
   #container { width: 100%; }
-  #left { width: 49%; float: left; }
-  #right { width: 49%; float: left; }
+  .onehalf { width: 49%; }
+  .left { float: left; }
+  .imgHeader { width: 640; margin-left: auto; margin-right: auto; }
   img { display: block; margin-left: auto; margin-right: auto; }
   p { width: 100%; text-align: center; }
   table { margin-left: auto; margin-right: auto; }
   td { text-align: center; }
+  .center { text-align: center; }
+  .onethird { width: 33%; }
+  .twothirds { width: 66%; }
+  .twentypercent { width: 20%; }
+  .eightypercent { width: 80%; }
   </style>
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-  <script>
-  function doMove(x, y) {
-    $.ajax({
-      url: "/cam1/cgi-bin/ptz.cgi?action=start&channel=1&code=Position&arg1=" + x + "&arg2=" + y + "&arg3=0",
-      password: "passw0rd",
-      username: "admin"
-    })
-    .fail(function(jqXHR, textStatus, errorThrown) {
-      alert("Ajax call to move failed: " + textStatus + " : " + errorThrown)
-    });
-  }
-  function getpos() {
-    $.ajax({
-      url: "/cam1/cgi-bin/ptz.cgi?action=getStatus&channel=1",
-      password: "passw0rd",
-      username: "admin"
-    })
-    .done(function(data) {
-      var x = null;
-      var y = null;
-      var tmp;
-      var lines = data.split("\n");
-      for(var line in lines) {
-        tmp = lines[line].split("=");
-        console.log("=" + tmp[0] + "=");
-        if(tmp[0] == "status.Postion[0]") { x = parseFloat(tmp[1]); }
-        if(tmp[0] == "status.Postion[1]") { y = parseFloat(tmp[1]); }
-      }
-      if(x === null || y === null) {
-        alert("Error: unable to parse position!");
-        return null;
-      }
-      alert([x, y]);
-    })
-    .fail(function(jqXHR, textStatus, errorThrown) {
-      alert("Ajax call to get position failed: " + textStatus + " : " + errorThrown)
-    });
-  }
-  </script>
 </head>
 <body>
+  <div id="header">
+    <a href="/simple/">Index</a> - <a href="/simple/videos">Videos ({{ unseen_count }} new)</a>
+  </div>
   <div id="container">
-    <div id="left">
-      <img src="/cam1/cgi-bin/mjpg/video.cgi?channel=1&subtype=1" />
-      <!-- <img src="http://via.placeholder.com/640x480" /> -->
-      <p><a href="/cam1/cgi-bin/snapshot.cgi" target="_blank">Full Size (still)</a></p>
-      <table>
-        <tr><td>&nbsp;</td><td><a href="#" onclick="doMove(0, -1500)">&uarr;</a><br /><a href="#" onclick="doMove(0, -3000)">&uuarr;</a></td><td>&nbsp;</td></tr>
-        <tr><td><a href="#" onclick="doMove(-1500, 0)">&larr;</a><a href="#" onclick="doMove(-3000, 0)">&llarr;</a></td><td>&nbsp;</td><td><a href="#" onclick="doMove(3000, 0)">&rrarr;</a><a href="#" onclick="doMove(1500, 0)">&rarr;</a></td></tr>
-        <tr><td>&nbsp;</td><td><a href="#" onclick="doMove(0, 3000)">&ddarr;</a><br /><a href="#" onclick="doMove(0, 1500)">&darr;</a></td><td>&nbsp;</td></tr>
-      </table>
-    <a href="#" onclick="getpos()">Get Position</a>
-    </div> <!-- /left -->
-    <div id="right">
-      <img src="/cam2/cgi-bin/mjpg/video.cgi?channel=1&subtype=1" />
-      <!-- <img src="http://via.placeholder.com/640x480" /> -->
-      <p><a href="/cam2/cgi-bin/snapshot.cgi" target="_blank">Full Size (still)</a></p>
-    </div> <!-- /right -->
+    {% for cam_name in cam_names %}
+    {{ livecam(cam_name, cameras[cam_name]) }}
+    {% endfor %}
   </div> <!-- /container -->
 </body>
 </html>

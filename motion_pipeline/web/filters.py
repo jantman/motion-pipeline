@@ -35,40 +35,23 @@ Jason Antman <jason@jasonantman.com> <http://www.jasonantman.com>
 ##################################################################################
 """
 
-import logging
+from jinja2.runtime import Undefined
+from humanize import naturaltime
 
-from flask import Flask
-
-from motion_pipeline.database.db import cleanup_db, init_db
-
-format = "%(asctime)s [%(levelname)s %(filename)s:%(lineno)s - " \
-         "%(name)s.%(funcName)s() ] %(message)s"
-logging.basicConfig(level=logging.DEBUG, format=format)
-logger = logging.getLogger()
-
-app = Flask(__name__)
-app.jinja_env.add_extension('jinja2.ext.loopcontrols')
-init_db()
+from motion_pipeline.utils import dtnow
+from motion_pipeline.web.app import app
 
 
-def before_request():
+@app.template_filter('ago')
+def ago_filter(dt):
     """
-    When running in debug mode, clear jinja cache.
+    Format a datetime using humanize.naturaltime, "ago"
+
+    :param dt: datetime to compare to now
+    :type dt: datetime.datetime
+    :return: ago string
+    :rtype: str
     """
-    logger.warning('DEBUG MODE - Clearing jinja cache')
-    app.jinja_env.cache = {}
-
-
-@app.teardown_appcontext
-def shutdown_session(exception=None):
-    cleanup_db()
-
-
-if app.debug:
-    app.config['TEMPLATES_AUTO_RELOAD'] = True
-    app.before_request(before_request)
-    app.jinja_env.auto_reload = True
-
-
-from motion_pipeline.web.filters import *  # noqa
-from motion_pipeline.web.views import *  # noqa
+    if dt == '' or dt is None or isinstance(dt, Undefined):
+        return ''
+    return naturaltime(dtnow() - dt)

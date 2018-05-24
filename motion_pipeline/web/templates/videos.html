@@ -57,13 +57,17 @@
   }
   h2 { text-align: center; }
   </style>
+  <link href="/static/css/common.css" rel="stylesheet">
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-  <script>
-  </script>
+  <script src="/static/js/motionapi.js"></script>
 </head>
 <body>
   <div id="header">
     <a href="/simple/">Index</a> - <a href="/simple/live">Live</a>
+    {% for cam_name in cam_names %}
+    - {{ cam_name }} <span id="detection_status_{{ cam_name }}" class="detection unknown">n/a</span>
+    {% if not cameras[cam_name].latest_event.is_finished %}&nbsp;<span class="cam-recording">Recording</span>{% endif %}
+    {% endfor %}
   </div>
   <h2>{{ unseen_count }} New Videos</h2>
   <table>
@@ -88,5 +92,8 @@
 {% endfor %}
       </tbody>
   </table>
+<script>
+loadDetectionStatus();
+</script>
 </body>
 </html>

@@ -1,0 +1,4 @@
+.detection.paused { background-color: orange; }
+.detection.active { background-color: green; }
+.detection.unknown { background-color: gray; }
+.cam-recording { background-color: red; }

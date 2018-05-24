@@ -51,6 +51,22 @@ from motion_pipeline import settings
 logger = logging.getLogger(__name__)
 
 
+def cams_dict():
+    cams = {
+        x: deepcopy(settings.CAMERAS[x]) for x in settings.CAMERAS.keys()
+    }
+    for cname in cams.keys():
+        levt = db_session.query(MotionEvent).filter(
+            MotionEvent.cam_name.__eq__(cname)
+        ).order_by(MotionEvent.date.desc()).first()
+        cams[cname]['latest_event'] = levt
+        lvideo = db_session.query(Video).filter(
+            Video.cam_name.__eq__(cname)
+        ).order_by(Video.date.desc()).first()
+        cams[cname]['latest_video'] = lvideo
+    return cams
+
+
 class SimpleMainView(MethodView):
     """
     Render the GET /simple/ view using the ``index.html`` template.
@@ -86,18 +102,7 @@ class SimpleLiveView(MethodView):
         ).filter(
             Video.is_archived.__eq__(False)
         ).count()
-        cams = {
-            x: deepcopy(settings.CAMERAS[x]) for x in settings.CAMERAS.keys()
-        }
-        for cname in cams.keys():
-            levt = db_session.query(MotionEvent).filter(
-                MotionEvent.cam_name.__eq__(cname)
-            ).order_by(MotionEvent.date.desc()).first()
-            cams[cname]['latest_event'] = levt
-            lvideo = db_session.query(Video).filter(
-                Video.cam_name.__eq__(cname)
-            ).order_by(Video.date.desc()).first()
-            cams[cname]['latest_video'] = lvideo
+        cams = cams_dict()
         return render_template(
             'live.html', unseen_count=sum(unseen_counts.values()),
             new_video_counts=unseen_counts, cameras=cams,
@@ -122,8 +127,10 @@ class SimpleVideosView(MethodView):
         ).filter(
             Video.is_archived.__eq__(False)
         ).count()
+        cams = cams_dict()
         return render_template(
-            'videos.html', events=events, unseen_count=unseen_count
+            'videos.html', events=events, unseen_count=unseen_count,
+            cameras=cams, cam_names=sorted(settings.CAMERAS.keys())
         )
 
 
@@ -135,8 +142,10 @@ class SimpleOneVideoView(MethodView):
 
     def get(self, video_filename):
         file = db_session.query(Video).get(video_filename)
+        cams = cams_dict()
         return render_template(
-            'video.html', video=file
+            'video.html', video=file, cameras=cams,
+            cam_names=sorted(settings.CAMERAS.keys())
         )
 
 

@@ -172,6 +172,26 @@ class ArchiveView(MethodView):
         return proxy_aware_redirect('/simple/videos', code=302)
 
 
+class ClientLog(MethodView):
+
+    def post(self):
+        m = request.get_json()
+        if m is None:
+            m = request.get_data()
+        self._log(m)
+        return 'OK'
+
+    def get(self):
+        self._log(dict(request.args))
+        return 'OK'
+
+    def _log(self, data):
+        logger.info(
+            'ClientLog from %s (%s): %s', request.environ['REMOTE_ADDR'],
+            request.environ['HTTP_USER_AGENT'], data
+        )
+
+
 app.add_url_rule(
     '/simple/', view_func=SimpleMainView.as_view('simple_main_view')
 )
@@ -190,4 +210,7 @@ app.add_url_rule(
 )
 app.add_url_rule(
     '/simple/archive/<path:path>', view_func=ArchiveView.as_view('archive_view')
+)
+app.add_url_rule(
+    '/simple/clientlog', view_func=ClientLog.as_view('client_log')
 )

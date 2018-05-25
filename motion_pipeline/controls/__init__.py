@@ -35,6 +35,8 @@ Jason Antman <jason@jasonantman.com> <http://www.jasonantman.com>
 ##################################################################################
 """
 
-from .simple import *
-from .detection_api import *
-from .control_api import *
+from .amcrest import Amcrest
+
+CONTROL_CLASSES = {
+    'Amcrest': Amcrest
+}

@@ -32,11 +32,15 @@
   </div>
   {% if cam.control_info is not none %}
   <div class="imgHeader center">
-  <button id="tiltUp">Tilt Up</button><br />
-  <button id="panLeft">Pan Left</button><button id="panRight">Pan Right</button><br />
-  <button id="tiltDown">Tilt Down</button><br />
-  Presets: <select name="presets" id="presets"><option value="" selected></option><option value="1">1</option><option value="2">2</option></select>
-  <button id="gotoPreset">GoTo</button> <button id="setPreset">Set</button>
+  <button id="{{ cam_name }}_tiltUp" onclick="moveCameraBy('{{ cam_name }}', 0, -1500)">Tilt Up</button><br />
+  <button id="{{ cam_name }}_panLeft" onclick="moveCameraBy('{{ cam_name }}', -1500, 0)">Pan Left</button><button id="{{ cam_name }}_panRight"  onclick="moveCameraBy('{{ cam_name }}', 1500, 0)">Pan Right</button><br />
+  <button id="{{ cam_name }}_tiltDown" onclick="moveCameraBy('{{ cam_name }}', 0, 1500)">Tilt Down</button><br />
+  Presets: <select name="{{ cam_name }}_presets" id="{{ cam_name }}_presets">
+    {% for k in cam.control_info.control_presets %}
+    <option value="{{ k }}">{{ cam.control_info.control_presets[k] }}</option>
+    {% endfor %}
+  </select>
+  <button id="{{ cam_name }}_gotoPreset" onclick="handleGotoPreset('{{ cam_name }}')">GoTo</button> <button id="{{ cam_name }}_setPreset" onclick="handleSetPreset('{{ cam_name }}')">Set</button>
   </div>
   {% endif %}
 </div> <!-- /left -->
@@ -63,6 +67,17 @@
   <link href="/static/css/common.css" rel="stylesheet">
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
   <script src="/static/js/motionapi.js"></script>
+  <script src="/static/js/controlapi.js"></script>
+  <script>
+  function handleGotoPreset(cam_name) {
+    var preset_num = $('#' + cam_name + '_presets').find(":selected").val();
+    moveCameraToPreset(cam_name, preset_num);
+  }
+  function handleSetPreset(cam_name) {
+    var preset_num = $('#' + cam_name + '_presets').find(":selected").val();
+    setCameraPreset(cam_name, preset_num);
+  }
+  </script>
 </head>
 <body>
   <div id="header">

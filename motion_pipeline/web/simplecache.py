@@ -1,4 +1,4 @@
-/*
+"""
 The latest version of this package is available at:
 <http://github.com/jantman/motion-pipeline>
 
@@ -33,39 +33,51 @@ either as a pull request on GitHub, or to me via email.
 AUTHORS:
 Jason Antman <jason@jasonantman.com> <http://www.jasonantman.com>
 ##################################################################################
- */
+"""
 
-function moveCameraBy(cam_name, x, y) {
-    var url = '/api/control/' + cam_name + '/move?x=' + x + '&y=' + y;
-    $.ajax({
-        url: url,
-        success: function(data) { loadDetectionStatus(); },
-        error: function(jqXHR, textStatus, errorThrown) {
-            console.log('moveCameraBy(%s, %s, %s) error: %s (%s)', cam_name, x, y, textStatus, errorThrown);
-            alert('ERROR: moveCameraBy() failed; see console log for details (and change this to a modal!)');
-        }
-    });
-}
+import logging
+from urllib.parse import urlparse
+from functools import wraps
 
-function moveCameraToPreset(cam_name, preset_num) {
-    var url = '/api/control/' + cam_name + '/move_to_preset?preset=' + preset_num;
-    $.ajax({
-        url: url,
-        success: function(data) { loadDetectionStatus(); },
-        error: function(jqXHR, textStatus, errorThrown) {
-            console.log('moveCameraToPreset(%s, %s) error: %s (%s)', cam_name, preset_num, textStatus, errorThrown);
-            alert('ERROR: moveCameraToPreset() failed; see console log for details (and change this to a modal!)');
-        }
-    });
-}
+import redis
 
-function setCameraPreset(cam_name, preset_num) {
-    var url = '/api/control/' + cam_name + '/set_preset?preset=' + preset_num;
-    $.ajax({
-        url: url,
-        error: function(jqXHR, textStatus, errorThrown) {
-            console.log('setCameraPreset(%s, %s) error: %s (%s)', cam_name, preset_num, textStatus, errorThrown);
-            alert('ERROR: setCameraPreset() failed; see console log for details (and change this to a modal!)');
-        }
-    });
-}
+logger = logging.getLogger(__name__)
+
+
+class SimpleCache(object):
+
+    def __init__(self, broker_url, key_prefix):
+        self._broker_url = broker_url
+        self._key_prefix = key_prefix
+        parsed = urlparse(self._broker_url)
+        assert parsed.scheme == 'redis'
+        logger.debug('Connecting to Redis at: %s', self._broker_url)
+        self._redis = redis.StrictRedis(
+            host=parsed.hostname, port=parsed.port, db=parsed.path.lstrip('/'),
+            decode_responses=True
+        )
+        logger.debug('Connected to Redis.')
+
+    def hash_set(self, key, value, ttl=60):
+        path = self._key_prefix + key
+        logger.debug('Setting cache hash "%s" to: %s', path, value)
+        self._redis.hmset(path, value)
+        logger.debug('Setting cache TTL on %s to: %d', path, ttl)
+        self._redis.expire(path, ttl)
+
+    def hash_get(self, key):
+        """returns an empty dict if not in cache"""
+        path = self._key_prefix + key
+        return self._redis.hgetall(path)
+
+    def string_set(self, key, value, ttl=60):
+        path = self._key_prefix + key
+        logger.debug(
+            'Setting cache string "%s" to "%s" with TTL %d', path, value, ttl
+        )
+        self._redis.set(path, value, ex=ttl)
+
+    def string_get(self, key):
+        """returns None if not in cache"""
+        path = self._key_prefix + key
+        return self._redis.get(path)

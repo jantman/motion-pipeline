@@ -42,6 +42,9 @@ from flask import jsonify, request
 from motion_pipeline.web.app import app
 from motion_pipeline import settings
 from motion_pipeline.controls import CONTROL_CLASSES
+from motion_pipeline.web.views.detection_api import (
+    get_detection_status, get_motion_apis
+)
 
 logger = logging.getLogger(__name__)
 
@@ -69,7 +72,13 @@ class MoveCamera(MethodView):
     """
 
     def get(self, cam_name):
-        raise NotImplementedError('disable detection first!')
+        if get_detection_status()[cam_name] != 'PAUSE':
+            logger.debug(
+                'Camera %s motion detection is not paused; pausing before '
+                'moving', cam_name
+            )
+            get_motion_apis()[cam_name].pause_detection()
+            assert get_detection_status(cache=False)[cam_name] == 'PAUSE'
         ctrl = control_for_camera(cam_name)
         x = float(request.args.get('x', '0.0'))
         y = float(request.args.get('y', '0.0'))
@@ -90,7 +99,13 @@ class MoveCameraToPreset(MethodView):
     """
 
     def get(self, cam_name):
-        raise NotImplementedError('disable detection first!')
+        if get_detection_status()[cam_name] != 'PAUSE':
+            logger.debug(
+                'Camera %s motion detection is not paused; pausing before '
+                'moving', cam_name
+            )
+            get_motion_apis()[cam_name].pause_detection()
+            assert get_detection_status(cache=False)[cam_name] == 'PAUSE'
         ctrl = control_for_camera(cam_name)
         preset_num = int(request.args['preset'])
         logger.info(

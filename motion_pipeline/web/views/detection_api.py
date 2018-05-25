@@ -42,6 +42,7 @@ from flask import jsonify, request
 from motion_pipeline.web.app import app
 from motion_pipeline import settings
 from motion_pipeline.motionapi import MotionApi, MotionApiException
+from motion_pipeline.web.simplecache import SimpleCache
 
 logger = logging.getLogger(__name__)
 
@@ -56,24 +57,38 @@ def get_motion_apis():
     return res
 
 
+def get_detection_status(cache=True):
+    cachekey = 'detectionstatus'
+    sc = SimpleCache(
+        settings.REDIS_BROKER_URL, settings.SIMPLECACHE_KEY_PREFIX
+    )
+    if cache:
+        c = sc.hash_get(cachekey)
+        if c != {}:
+            logger.debug('Using cached detectionstatus value: %s', c)
+            return c
+    cams = get_motion_apis()
+    res = {}
+    for cam_name, api in cams.items():
+        try:
+            res[cam_name] = api.detection_status
+        except MotionApiException as ex:
+            logger.error(
+                'Error getting detection status of camera %s: %s',
+                cam_name, ex, exc_info=True
+            )
+            res[cam_name] = 'unknown'
+    sc.hash_set(cachekey, res, ttl=30)
+    return res
+
+
 class DetectionStatus(MethodView):
     """
     Render the GET /api/detection/status API response.
     """
 
     def get(self):
-        cams = get_motion_apis()
-        res = {}
-        for cam_name, api in cams.items():
-            try:
-                res[cam_name] = api.detection_status
-            except MotionApiException as ex:
-                logger.error(
-                    'Error getting detection status of camera %s: %s',
-                    cam_name, ex, exc_info=True
-                )
-                res[cam_name] = 'unknown'
-        return jsonify(res)
+        return jsonify(get_detection_status())
 
 
 class DetectionStart(MethodView):
@@ -88,6 +103,8 @@ class DetectionStart(MethodView):
             cam_names = [request.args.get('cam')]
         for cam_name in cam_names:
             cams[cam_name].resume_detection()
+        # bust cache on detection status
+        get_detection_status(cache=False)
         return jsonify({'success': True})
 
 
@@ -103,6 +120,8 @@ class DetectionPause(MethodView):
             cam_names = [request.args.get('cam')]
         for cam_name in cam_names:
             cams[cam_name].pause_detection()
+        # bust cache on detection status
+        get_detection_status(cache=False)
         return jsonify({'success': True})
 
 

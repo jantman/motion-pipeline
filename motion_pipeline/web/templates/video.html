@@ -2,7 +2,7 @@
 <head>
   <title>Video - {{ video.filename }}</title>
   <style>
-  body { margin: 0; overflow: hidden; }
+  body { margin: 0; }
   #navheader { width: 98%; text-align: left; padding-left: 2em; top: 0; left: 0; margin: 0; }
   #videoinfo { width: 98%; text-align: center; margin: 0; }
   #videodiv { width: 98%; margin: 0; }
@@ -58,11 +58,15 @@
   function divToFillRemaining() {
     var w = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
     var h = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
-    var headerHeight = $('#navheader').height();
-    var infoHeight = $('#videoinfo').height();
-    var newHeight = h - (headerHeight + infoHeight);
     var player = videojs('my-video');
-    player.height(newHeight);
+    if (w > h) {
+        var headerHeight = $('#navheader').height();
+        var infoHeight = $('#videoinfo').height();
+        var newHeight = h - (headerHeight + infoHeight);
+        player.height(newHeight);
+    } else {
+        player.width(w);
+    }
   }
   divToFillRemaining();
   loadDetectionStatus();

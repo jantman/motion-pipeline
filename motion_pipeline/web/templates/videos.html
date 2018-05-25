@@ -8,7 +8,7 @@
                       ERROR: No video for {{ event.video.filename }}
                       {% endif %}
                   {% else %}
-                      <a href="/simple/videos/{{ event.video.filename }}">
+                      <a href="/simple/videos/{{ event.video.filename }}.htm">
                       {% if event.video is none or event.video.thumbnail_name is none %}
                       {% set imgloc = "/static/640x480.png" %}
                       {% else %}
@@ -35,7 +35,7 @@
                   frame={{ event.frame_num }}<br />
                   host={{ event.host }}
               </td>
-              <td><a href="/simple/archive/{{ event.video.filename }}">Archive</a></td>
+              <td><a href="/simple/archive/{{ event.video.filename }}.htm">Archive</a></td>
           </tr>
 {%- endmacro %}
 <html>

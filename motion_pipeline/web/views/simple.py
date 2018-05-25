@@ -202,14 +202,14 @@ app.add_url_rule(
     '/simple/videos', view_func=SimpleVideosView.as_view('simple_videos_view')
 )
 app.add_url_rule(
-    '/simple/videos/<path:video_filename>',
+    '/simple/videos/<path:video_filename>.htm',
     view_func=SimpleOneVideoView.as_view('simple_one_video_view')
 )
 app.add_url_rule(
     '/uploads/<path:path>', view_func=UploadsView.as_view('uploads_view')
 )
 app.add_url_rule(
-    '/simple/archive/<path:path>', view_func=ArchiveView.as_view('archive_view')
+    '/simple/archive/<path:path>.htm', view_func=ArchiveView.as_view('archive_view')
 )
 app.add_url_rule(
     '/simple/clientlog', view_func=ClientLog.as_view('client_log')

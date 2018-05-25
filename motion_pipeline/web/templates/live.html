@@ -33,7 +33,9 @@
   {% if cam.control_info is not none %}
   <div class="imgHeader center">
   <button id="{{ cam_name }}_tiltUp" onclick="moveCameraBy('{{ cam_name }}', 0, -1500)">Tilt Up</button><br />
-  <button id="{{ cam_name }}_panLeft" onclick="moveCameraBy('{{ cam_name }}', -1500, 0)">Pan Left</button><button id="{{ cam_name }}_panRight"  onclick="moveCameraBy('{{ cam_name }}', 1500, 0)">Pan Right</button><br />
+  <button id="{{ cam_name }}_tiltUpFast" onclick="moveCameraBy('{{ cam_name }}', 0, -3000)">TILT UP</button><br />
+  <button id="{{ cam_name }}_panLeft" onclick="moveCameraBy('{{ cam_name }}', -1500, 0)">Pan Left</button><button id="{{ cam_name }}_panLeftFast" onclick="moveCameraBy('{{ cam_name }}', -3000, 0)">PAN LEFT</button><button id="{{ cam_name }}_panRightFast"  onclick="moveCameraBy('{{ cam_name }}', 3000, 0)">PAN RIGHT</button><button id="{{ cam_name }}_panRight"  onclick="moveCameraBy('{{ cam_name }}', 1500, 0)">Pan Right</button><br />
+  <button id="{{ cam_name }}_tiltDownFast" onclick="moveCameraBy('{{ cam_name }}', 0, 3000)">TILT DOWN</button><br />
   <button id="{{ cam_name }}_tiltDown" onclick="moveCameraBy('{{ cam_name }}', 0, 1500)">Tilt Down</button><br />
   Presets: <select name="{{ cam_name }}_presets" id="{{ cam_name }}_presets">
     {% for k in cam.control_info.control_presets %}

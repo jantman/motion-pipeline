@@ -100,10 +100,10 @@ def do_thumbnail(self, filename, trigger_newvideo_ready=True):
 
 
 @app.task(
-    bind=True, name='newvideo_ready', max_retries=4, acks_late=True,
+    bind=True, name='newvideo_ready', max_retries=3, acks_late=True,
     task_time_limit=30, ignore_result=True
 )
-def newvideo_ready(self, filename, event_text):
+def newvideo_ready(self, filename, event_text, notification_id=None):
     """
     Triggered when a new video has been added to the DB and the thumbnail
     has been generated. Entrypoint for notifications and other event handling
@@ -111,23 +111,32 @@ def newvideo_ready(self, filename, event_text):
     """
     logger.debug(
         'Running task newvideo_ready() id=%s retries=%d filename=%s '
-        'event_text=%s', self.request.id, self.request.retries, filename,
-        event_text
+        'event_text=%s notification_id=%s', self.request.id,
+        self.request.retries, filename, event_text, notification_id
     )
     try:
         from motion_pipeline.database.dbsettings import get_db_setting
-        from motion_pipeline.celerytasks.processor import MotionTaskProcessor
-        logger.warning(
-            'NOT IMPLEMENTED: task %s newvideo_ready(%s, %s)', self.request.id,
-            filename, event_text
+        if not get_db_setting('notifications', True):
+            logger.info('Notifications disabled; not processing task.')
+            return
+        from motion_pipeline.celerytasks.notifications import \
+            NotificationProcessor
+        p = NotificationProcessor(
+            filename, event_text, self.request,
+            notification_id=notification_id, tasklogger=logger
         )
-        # get_db_setting('notifications', True)
+        notification_id = p.notification_id
+        p.generate_and_send()
     except Exception as ex:
         logger.warning(
             'Caught exception running newvideo_ready(%s, %s): %s',
             filename, event_text, ex, exc_info=True
         )
-        self.retry(countdown=2 ** self.request.retries)
+        self.retry(
+            (filename, event_text),
+            {'notification_id': notification_id},
+            countdown=2 ** self.request.retries
+        )
 
 
 @app.task(

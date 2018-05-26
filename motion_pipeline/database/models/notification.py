@@ -35,7 +35,60 @@ Jason Antman <jason@jasonantman.com> <http://www.jasonantman.com>
 ##################################################################################
 """
 
-from motion_pipeline.database.models.video import Video
-from motion_pipeline.database.models.motion_event import MotionEvent
-from motion_pipeline.database.models.dbsetting import DBSetting
-from motion_pipeline.database.models.notification import Notification
+import logging
+from sqlalchemy import (
+    Column, String, Integer, DateTime, ForeignKey
+)
+from sqlalchemy.orm import relationship
+
+try:
+    from anyjson import serialize
+    from anyjson import deserialize
+except ImportError:
+    from json import dumps as serialize
+    from json import loads as deserialize
+
+from motion_pipeline.database.models.base import Base, ModelAsDict
+
+logger = logging.getLogger(__name__)
+
+
+class Notification(Base, ModelAsDict):
+    """
+    Class that describes a database-persisted setting
+    """
+
+    __tablename__ = 'notifications'
+    __table_args__ = (
+        {'mysql_engine': 'InnoDB'}
+    )
+
+    #: Primary Key
+    id = Column(Integer, primary_key=True)
+
+    #: Name of the notification provider
+    provider_name = Column(String(255))
+
+    #: Video filename
+    video_filename = Column(String(255), ForeignKey('videos.filename'))
+
+    #: Video object relationship
+    video = relationship('Video', uselist=False)
+
+    #: The "text_event", a unique identifier for the event. This should be
+    #: "%t-%Y%m%d%H%M%S-%q-%v"
+    text_event = Column(String(255), ForeignKey('motion_events.text_event'))
+
+    event = relationship('MotionEvent', uselist=False)
+
+    #: datetime when the notification was generated
+    generated_time = Column(DateTime)
+
+    #: datetime when the notification was successfully sent
+    sent_time = Column(DateTime)
+
+    #: number of retries needed to send the notification
+    num_retries = Column(Integer, default=0)
+
+    #: the response from the provider
+    provider_response = Column(String(255))

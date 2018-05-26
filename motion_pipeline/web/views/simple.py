@@ -45,7 +45,7 @@ from sqlalchemy import asc, func
 from motion_pipeline.web.app import app
 from motion_pipeline.web.utils import proxy_aware_redirect
 from motion_pipeline.database.db import db_session
-from motion_pipeline.database.models import Video, MotionEvent
+from motion_pipeline.database.models import Video, MotionEvent, Notification
 from motion_pipeline.database.dbsettings import get_db_setting
 from motion_pipeline import settings
 
@@ -174,6 +174,20 @@ class ArchiveView(MethodView):
         return proxy_aware_redirect('/simple/videos', code=302)
 
 
+class NotificationRedirect(MethodView):
+    """
+    Redirect for a notification
+    """
+
+    def get(self, _id):
+        n = db_session.query(Notification).get(_id)
+        assert n is not None
+        return proxy_aware_redirect(
+            '/simple/videos/%s.htm' % n.video_filename,
+            code=302
+        )
+
+
 class ClientLog(MethodView):
 
     def post(self):
@@ -215,4 +229,8 @@ app.add_url_rule(
 )
 app.add_url_rule(
     '/simple/clientlog', view_func=ClientLog.as_view('client_log')
+)
+app.add_url_rule(
+    '/simple/n/<int:_id>',
+    view_func=NotificationRedirect.as_view('notification_redirect')
 )

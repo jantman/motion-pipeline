@@ -14,6 +14,7 @@
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
   <script src="/static/js/motionapi.js"></script>
   <script src="/static/js/common.js"></script>
+  <script src="/static/js/notifications.js"></script>
 </head>
 <body>
   <div id="navheader">
@@ -22,6 +23,7 @@
     - {{ cam_name }} <span id="detection_status_{{ cam_name }}" class="detection unknown">n/a</span>
     {% if not cameras[cam_name].latest_event.is_finished %}&nbsp;<span class="cam-recording">Recording</span>{% endif %}
     {% endfor %}
+    - notifications: <span id="notificationStatus" class="notifications unknown">unknown</span>
   </div>
   <div id="videoinfo">
     <table>
@@ -68,8 +70,11 @@
         player.width(w);
     }
   }
-  divToFillRemaining();
-  loadDetectionStatus();
+  $( document ).ready(function() {
+      loadDetectionStatus();
+      loadNotificationStatus();
+      divToFillRemaining();
+  });
   </script>
 </body>
 </html>

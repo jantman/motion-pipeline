@@ -69,7 +69,7 @@ class DBSetting(Base, ModelAsDict):
 
     @property
     def value(self):
-        return deserialize(self._email)['v']
+        return deserialize(self._value)['v']
 
     @value.setter
     def value(self, value):

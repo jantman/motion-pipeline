@@ -80,6 +80,7 @@
   <script src="/static/js/common.js"></script>
   <script src="/static/js/motionapi.js"></script>
   <script src="/static/js/controlapi.js"></script>
+  <script src="/static/js/notifications.js"></script>
   <script>
   function handleGotoPreset(cam_name) {
     var preset_num = $('#' + cam_name + '_presets').find(":selected").val();
@@ -93,7 +94,7 @@
 </head>
 <body>
   <div id="header">
-    <a href="/simple/">Index</a> - <a href="/simple/videos">Videos ({{ unseen_count }} new)</a> - <a href="#" onclick="setDetection(null, 1)">enable all</a> / <a href="#" onclick="setDetection(null, 0)">disable all</a>
+    <a href="/simple/">Index</a> - <a href="/simple/videos">Videos ({{ unseen_count }} new)</a> - <a href="#" onclick="setDetection(null, 1)">enable all</a> / <a href="#" onclick="setDetection(null, 0)">disable all</a> - notifications: <span id="notificationStatus" class="notifications unknown">unknown</span>
   </div>
   <div id="container">
     {% for cam_name in cam_names %}
@@ -101,7 +102,10 @@
     {% endfor %}
   </div> <!-- /container -->
 <script>
-loadDetectionStatus();
+  $( document ).ready(function() {
+      loadDetectionStatus();
+      loadNotificationStatus();
+  });
 </script>
 </body>
 </html>

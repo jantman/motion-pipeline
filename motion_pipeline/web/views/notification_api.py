@@ -53,7 +53,7 @@ class NotificationState(MethodView):
 
     def post(self):
         m = request.get_json()
-        assert m.keys() == ['state']
+        assert list(m.keys()) == ['state']
         assert m['state'] in [True, False]
         set_db_setting('notifications', m['state'])
         return jsonify({'success': True})

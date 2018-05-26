@@ -115,10 +115,13 @@ def newvideo_ready(self, filename, event_text):
         event_text
     )
     try:
+        from motion_pipeline.database.dbsettings import get_db_setting
+        from motion_pipeline.celerytasks.processor import MotionTaskProcessor
         logger.warning(
             'NOT IMPLEMENTED: task %s newvideo_ready(%s, %s)', self.request.id,
             filename, event_text
         )
+        # get_db_setting('notifications', True)
     except Exception as ex:
         logger.warning(
             'Caught exception running newvideo_ready(%s, %s): %s',
@@ -141,10 +144,13 @@ def newevent_ready(self, event_text):
         self.request.id, self.request.retries, event_text
     )
     try:
+        from motion_pipeline.database.dbsettings import get_db_setting
+        from motion_pipeline.celerytasks.processor import MotionTaskProcessor
         logger.warning(
             'NOT IMPLEMENTED: task %s newevent_ready(%s)', self.request.id,
             event_text
         )
+        # get_db_setting('notifications', True)
     except Exception as ex:
         logger.warning(
             'Caught exception running newevent_ready(%s): %s',

@@ -46,6 +46,11 @@ logger = logging.getLogger(__name__)
 def get_db_setting(name, default):
     s = db_session.query(DBSetting).get(name)
     if s is None:
+        logger.info(
+            'DBSetting %s not in DB; setting to default: %s',
+            name, default
+        )
+        set_db_setting(name, default)
         return default
     return s.value
 
@@ -55,5 +60,6 @@ def set_db_setting(name, value):
     if s is None:
         s = DBSetting(name=name)
         db_session.add(s)
+    logger.debug('Set DBSetting %s to: %s', name, value)
     s.value = value
     db_session.commit()

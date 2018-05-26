@@ -35,7 +35,31 @@ Jason Antman <jason@jasonantman.com> <http://www.jasonantman.com>
 ##################################################################################
 """
 
-from .simple import *
-from .detection_api import *
-from .control_api import *
-from .notification_api import *
+import logging
+from flask.views import MethodView
+from flask import jsonify, request
+
+from motion_pipeline.web.app import app
+from motion_pipeline import settings
+from motion_pipeline.database.dbsettings import get_db_setting, set_db_setting
+
+logger = logging.getLogger(__name__)
+
+
+class NotificationState(MethodView):
+
+    def get(self):
+        return jsonify({'state': get_db_setting('notifications', True)})
+
+    def post(self):
+        m = request.get_json()
+        assert m.keys() == ['state']
+        assert m['state'] in [True, False]
+        set_db_setting('notifications', m['state'])
+        return jsonify({'success': True})
+
+
+app.add_url_rule(
+    '/api/notifications/state',
+    view_func=NotificationState.as_view('notification_state')
+)

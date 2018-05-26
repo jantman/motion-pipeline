@@ -46,6 +46,7 @@ from motion_pipeline.web.app import app
 from motion_pipeline.web.utils import proxy_aware_redirect
 from motion_pipeline.database.db import db_session
 from motion_pipeline.database.models import Video, MotionEvent
+from motion_pipeline.database.dbsettings import get_db_setting
 from motion_pipeline import settings
 
 logger = logging.getLogger(__name__)
@@ -79,7 +80,8 @@ class SimpleMainView(MethodView):
             Video.is_archived.__eq__(False)
         ).count()
         return render_template(
-            'index.html', unseen_count=unseen_count
+            'index.html', unseen_count=unseen_count,
+            notifications_enabled=get_db_setting('notifications', True)
         )
 
 
@@ -106,7 +108,8 @@ class SimpleLiveView(MethodView):
         return render_template(
             'live.html', unseen_count=sum(unseen_counts.values()),
             new_video_counts=unseen_counts, cameras=cams,
-            cam_names=sorted(settings.CAMERAS.keys())
+            cam_names=sorted(settings.CAMERAS.keys()),
+            notifications_enabled=get_db_setting('notifications', True)
         )
 
 
@@ -130,7 +133,8 @@ class SimpleVideosView(MethodView):
         cams = cams_dict()
         return render_template(
             'videos.html', events=events, unseen_count=unseen_count,
-            cameras=cams, cam_names=sorted(settings.CAMERAS.keys())
+            cameras=cams, cam_names=sorted(settings.CAMERAS.keys()),
+            notifications_enabled=get_db_setting('notifications', True)
         )
 
 
@@ -145,7 +149,8 @@ class SimpleOneVideoView(MethodView):
         cams = cams_dict()
         return render_template(
             'video.html', video=file, cameras=cams,
-            cam_names=sorted(settings.CAMERAS.keys())
+            cam_names=sorted(settings.CAMERAS.keys()),
+            notifications_enabled=get_db_setting('notifications', True)
         )
 
 

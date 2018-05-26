@@ -35,7 +35,42 @@ Jason Antman <jason@jasonantman.com> <http://www.jasonantman.com>
 ##################################################################################
 """
 
-from .simple import *
-from .detection_api import *
-from .control_api import *
-from .notification_api import *
+import logging
+from sqlalchemy import (
+    Column, String
+)
+
+try:
+    from anyjson import serialize
+    from anyjson import deserialize
+except ImportError:
+    from json import dumps as serialize
+    from json import loads as deserialize
+
+from motion_pipeline.database.models.base import Base, ModelAsDict
+
+logger = logging.getLogger(__name__)
+
+
+class Setting(Base, ModelAsDict):
+    """
+    Class that describes a database-persisted setting
+    """
+
+    __tablename__ = 'settings'
+    __table_args__ = (
+        {'mysql_engine': 'InnoDB'}
+    )
+
+    #: The setting name
+    name = Column(String(255), primary_key=True)
+
+    _value = Column("value", String)
+
+    @property
+    def value(self):
+        return deserialize(self._email)['v']
+
+    @email.setter
+    def email(self, value):
+        self._value = serialize({'v': value})

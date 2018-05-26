@@ -105,6 +105,8 @@ class SimpleLiveView(MethodView):
             Video.is_archived.__eq__(False)
         ).count()
         cams = cams_dict()
+        for camname in cams.keys():
+            logger.info('cam %s latest_event: %s', camname, cams[camname]['latest_event'])
         return render_template(
             'live.html', unseen_count=sum(unseen_counts.values()),
             new_video_counts=unseen_counts, cameras=cams,

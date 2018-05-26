@@ -4,7 +4,7 @@
     <div class="onethird left center"><a href="{{ cam.snapshot_url }}">snapshot</a> | <a href="{{ cam.rstp_url }}">rstp</a></div>
     <div class="onethird left center">
       <strong>{{ cam_name }}</strong>
-      {% if not cam.latest_event.is_finished %}
+      {% if cam.latest_event is not none and not cam.latest_event.is_finished %}
       &nbsp;<span class="cam-recording">Recording</span>
       {% endif %}
     </div>
@@ -21,13 +21,20 @@
     <div class="twentypercent left">Detection: <span id="detection_status_{{ cam_name }}" class="detection unknown">n/a</span></div>
     <div class="eightypercent left">
       <strong>Last Event:</strong>
-        {% if cam.latest_event.is_finished %}
+        {% if cam.latest_event is none %}
+        No events.
+        {% elif cam.latest_event.is_finished %}
         {{ cam.latest_event.date|ago }}, {{ cam.latest_event.handler_call_end_datetime - cam.latest_event.handler_call_start_datetime }}s long
         {% else %}
         <strong>In Progress</strong>, started {{ cam.latest_event.handler_call_start_datetime|ago }}
         {% endif %}
       <br />
-      <strong>Last Recording:</strong> <a href="/simple/videos/{{ cam.latest_video.filename }}">{{ cam.latest_video.filename }}</a> {{ cam.latest_video.date|ago }}, {{ cam.latest_video.length_sec }}s
+      <strong>Last Recording:</strong>
+      {% if cam.latest_video is none %}
+      No recordings.
+      {% else %}
+      <a href="/simple/videos/{{ cam.latest_video.filename }}">{{ cam.latest_video.filename }}</a> {{ cam.latest_video.date|ago }}, {{ cam.latest_video.length_sec }}s
+      {% endif %}
     </div>
   </div>
   {% if cam.control_info is not none %}

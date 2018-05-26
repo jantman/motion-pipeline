@@ -37,7 +37,7 @@ Jason Antman <jason@jasonantman.com> <http://www.jasonantman.com>
 
 import logging
 from flask.views import MethodView
-from flask import render_template, send_from_directory, redirect, request
+from flask import render_template, send_from_directory, request
 from copy import deepcopy
 
 from sqlalchemy import asc, func

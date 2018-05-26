@@ -52,7 +52,7 @@ from motion_pipeline.database.models.base import Base, ModelAsDict
 logger = logging.getLogger(__name__)
 
 
-class Setting(Base, ModelAsDict):
+class DBSetting(Base, ModelAsDict):
     """
     Class that describes a database-persisted setting
     """
@@ -65,12 +65,12 @@ class Setting(Base, ModelAsDict):
     #: The setting name
     name = Column(String(255), primary_key=True)
 
-    _value = Column("value", String)
+    _value = Column("value", String(255))
 
     @property
     def value(self):
         return deserialize(self._email)['v']
 
-    @email.setter
-    def email(self, value):
+    @value.setter
+    def value(self, value):
         self._value = serialize({'v': value})

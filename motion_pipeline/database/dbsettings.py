@@ -38,22 +38,22 @@ Jason Antman <jason@jasonantman.com> <http://www.jasonantman.com>
 import logging
 
 from motion_pipeline.database.db import db_session
-from motion_pipeline.database.models.setting import Setting
+from motion_pipeline.database.models.dbsetting import DBSetting
 
 logger = logging.getLogger(__name__)
 
 
 def get_db_setting(name, default):
-    s = db_session.query(Setting).get(name)
+    s = db_session.query(DBSetting).get(name)
     if s is None:
         return default
     return s.value
 
 
 def set_db_setting(name, value):
-    s = db_session.query(Setting).get(name)
+    s = db_session.query(DBSetting).get(name)
     if s is None:
-        s = Setting(name=name)
+        s = DBSetting(name=name)
         db_session.add(s)
     s.value = value
     db_session.commit()

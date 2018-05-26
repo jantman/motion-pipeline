@@ -37,3 +37,4 @@ Jason Antman <jason@jasonantman.com> <http://www.jasonantman.com>
 
 from motion_pipeline.database.models.video import Video
 from motion_pipeline.database.models.motion_event import MotionEvent
+from motion_pipeline.database.models.dbsetting import DBSetting

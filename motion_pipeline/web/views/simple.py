@@ -99,11 +99,6 @@ class SimpleLiveView(MethodView):
                 Video.is_archived.__eq__(False)
             ).group_by(Video.cam_name).all()
         }
-        unseen_count = db_session.query(
-            Video.filename
-        ).filter(
-            Video.is_archived.__eq__(False)
-        ).count()
         cams = cams_dict()
         for camname in cams.keys():
             logger.info('cam %s latest_event: %s', camname, cams[camname]['latest_event'])

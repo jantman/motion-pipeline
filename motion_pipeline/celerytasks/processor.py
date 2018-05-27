@@ -264,8 +264,8 @@ class MotionTaskProcessor(object):
         video.thumbnail_name = thumbnail_name
         video.length_sec = video_length
         db_session.commit()
-        db_session.expunge_all()
-        cleanup_db()
         if trigger_newvideo_ready:
             from motion_pipeline.celerytasks.tasks import newvideo_ready
             newvideo_ready.delay(video.filename, video.text_event)
+        db_session.expunge_all()
+        cleanup_db()

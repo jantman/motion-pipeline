@@ -64,6 +64,7 @@ class NotificationProcessor(object):
         global logger
         if tasklogger is not None:
             logger = tasklogger
+        db_session.expire_all()
         logger.debug(
             'Initalizing NotificationProcessor filename=%s event_text=%s '
             'notification_id=%s', filename, event_text, notification_id
@@ -151,6 +152,8 @@ class NotificationProcessor(object):
         self._notification.num_retries = self._celery_request.retries
         self._notification.provider_response = r.text
         db_session.commit()
+        db_session.expunge_all()
+        cleanup_db()
 
     def generate_and_send(self):
         """generate params and POST to pushover"""

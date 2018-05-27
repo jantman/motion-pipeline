@@ -70,6 +70,7 @@ class MotionTaskProcessor(object):
         global logger
         if tasklogger is not None:
             logger = tasklogger
+        db_session.expire_all()
 
     def process(self, *args, **kwargs):
         logger.info('Picked up task: args=%s kwargs=%s', args, kwargs)
@@ -88,6 +89,7 @@ class MotionTaskProcessor(object):
                     args[0], kwargs
                 )
         finally:
+            db_session.expunge_all()
             cleanup_db()
 
     def _handle_event_start(self, **kwargs):
@@ -262,6 +264,8 @@ class MotionTaskProcessor(object):
         video.thumbnail_name = thumbnail_name
         video.length_sec = video_length
         db_session.commit()
+        db_session.expunge_all()
+        cleanup_db()
         if trigger_newvideo_ready:
             from motion_pipeline.celerytasks.tasks import newvideo_ready
             newvideo_ready.delay(video.filename, video.text_event)

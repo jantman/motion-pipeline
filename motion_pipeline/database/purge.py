@@ -44,7 +44,7 @@ from sqlalchemy import or_
 
 from motion_pipeline.database.db import init_db, db_session
 from motion_pipeline.cliutils import set_log_debug, set_log_info
-from motion_pipeline.database.models import Video, MotionEvent
+from motion_pipeline.database.models import Video, MotionEvent, Notification
 import motion_pipeline.settings as settings
 from motion_pipeline.s3connection import get_s3_bucket
 from motion_pipeline.utils import dtnow
@@ -99,6 +99,10 @@ def purge_archived_from_db():
         'Found %d archived videos in database', len(archived)
     )
     for video in archived:
+        for n in db_session.query(Notification).filter(
+            Notification.video_filename.__eq__(video.filename)
+        ):
+            db_session.delete(n)
         try:
             remove_bucket_object(
                 bucket, settings.BUCKET_PREFIX + video.filename

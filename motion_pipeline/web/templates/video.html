@@ -18,7 +18,12 @@
 </head>
 <body>
   <div id="navheader">
-    <a href="/simple/">Index</a> - <a href="/simple/live">Live</a> - <a href="/simple/videos">Back to Videos</a> - <a href="/simple/archive/{{ video.filename }}.htm"><button id="archive">Archive</button></a>
+    <a href="/simple/">Index</a> - <a href="/simple/live">Live</a> - <a href="/simple/videos">Back to Videos</a>
+    {% if video.is_archived %}
+      - <strong>Archived</strong>
+    {% else %}
+    - <a href="/simple/archive/{{ video.filename }}.htm"><button id="archive">Archive</button></a>
+    {% endif %}
     {% for cam_name in cam_names %}
     - {{ cam_name }} <span id="detection_status_{{ cam_name }}" class="detection unknown">n/a</span>
     {% if cameras[cam_name].latest_event is not none and not cameras[cam_name].latest_event.is_finished %}&nbsp;<span class="cam-recording">Recording</span>{% endif %}

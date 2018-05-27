@@ -1,7 +1,7 @@
 {% macro livecam(cam_name, cam) -%}
 <div class="livecam">
   <div class="imgHeader">
-    <div class="onethird left center"><a href="{{ cam.snapshot_url }}">snapshot</a> | <a href="{{ cam.rstp_url }}">rstp</a></div>
+    <div class="onethird left center"><a href="{{ cam.snapshot_url }}">snapshot</a> | <a href="{{ cam.rstp_url }}">rstp</a> | <a href="{{ cam.mjpeg_url }}">mjpeg</a></div>
     <div class="onethird left center">
       <strong>{{ cam_name }}</strong>
       {% if cam.latest_event is not none and not cam.latest_event.is_finished %}
@@ -33,7 +33,7 @@
       {% if cam.latest_video is none %}
       No recordings.
       {% else %}
-      <a href="/simple/videos/{{ cam.latest_video.filename }}">{{ cam.latest_video.filename }}</a> {{ cam.latest_video.date|ago }}, {{ cam.latest_video.length_sec }}s
+      <a href="/simple/videos/{{ cam.latest_video.filename }}.htm">{{ cam.latest_video.filename }}</a> {{ cam.latest_video.date|ago }}, {{ cam.latest_video.length_sec }}s
       {% endif %}
     </div>
   </div>

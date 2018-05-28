@@ -41,35 +41,25 @@ from motion_pipeline.version import VERSION, PROJECT_URL
 with open('README.rst') as file:
     long_description = file.read()
 
+
+def load_requirements(fname):
+    res = []
+    with open(fname) as f:
+        for line in f.readlines():
+            if line.startswith('#'):
+                continue
+            res.append(line.strip())
+    return res
+
+
 # These should be just the absolute minimum requiremenrs for
 # the motion_handler.py script to run.
-requires = [
-    'boto3>=1.7.0, <2.0.0',
-    'psutil>=5.0.0, <6.0.0',
-    'anyjson>=0.3.0, <1.0.0',
-    'hiredis>=0.2.0, <1.0.0',
-    'redis>=2.10.0, <3.0.0',
-    'celery>=4.0.0, <5.0.0'
-]
+requires = load_requirements('requirements.txt')
 
 # Requirements for everything beyond that...
 extras_require = {
-    'web': [
-        'Flask>=1.0.0, <2.0.0',
-        'PyMySQL>=0.8.0, <1.0.0',
-        'SQLAlchemy-Utc>=0.10.0, <1.0.0',
-        'SQLAlchemy>=1.2.0, <1.3.0',
-        'alembic>=0.9.0, <1.0.0',
-        'humanize>=0.5.0, <1.0.0',
-        'requests>=2.0.0, <3.0.0'
-    ],
-    'worker': [
-        'PyMySQL>=0.8.0, <1.0.0',
-        'SQLAlchemy-Utc>=0.10.0, <1.0.0',
-        'SQLAlchemy>=1.2.0, <1.3.0',
-        'Pillow>=5.0.0, <6.0.0',
-        'alembic>=0.9.0, <1.0.0'
-    ]
+    'web': load_requirements('requirements-web.txt'),
+    'worker': load_requirements('requirements-worker.txt')
 }
 
 all_req = list(set([

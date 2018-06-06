@@ -152,9 +152,7 @@ class MotionTaskProcessor(object):
                 motion_width=kwargs['motion_width'],
                 motion_height=kwargs['motion_height'],
                 motion_center_x=kwargs['motion_center_x'],
-                motion_center_y=kwargs['motion_center_y'],
-                is_finished=True,
-                handler_call_end_datetime=_call_date
+                motion_center_y=kwargs['motion_center_y']
             )
             db_session.add(e)
         else:

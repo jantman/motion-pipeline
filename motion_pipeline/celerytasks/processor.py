@@ -128,44 +128,42 @@ class MotionTaskProcessor(object):
         _call_date = datetime.strptime(
             kwargs['handler_call_time'], '%Y-%m-%d %H:%M:%S'
         )
-        if e is not None:
+        if e is None:
+            logger.info(
+                'Writing event_end to DB without matching started event '
+                '(text_event=%s)', kwargs['text_event']
+            )
+            _date = datetime.strptime(
+                kwargs['call_date'], '%Y-%m-%d %H:%M:%S'
+            )
+            e = MotionEvent(
+                text_event=kwargs['text_event'],
+                date=_date,
+                event_id=kwargs['event_id'],
+                frame_num=kwargs['frame_num'],
+                cam_num=kwargs['cam'],
+                cam_name=kwargs['cam_name'],
+                host=kwargs['host'],
+                changed_pixels=kwargs['changed_px'],
+                threshold=kwargs['threshold'],
+                despeckle_labels=kwargs['despeckle_labels'],
+                fps=kwargs['fps'],
+                noise=kwargs['noise'],
+                motion_width=kwargs['motion_width'],
+                motion_height=kwargs['motion_height'],
+                motion_center_x=kwargs['motion_center_x'],
+                motion_center_y=kwargs['motion_center_y'],
+                is_finished=True,
+                handler_call_end_datetime=_call_date
+            )
+            db_session.add(e)
+        else:
             logger.info(
                 'Writing event_end to DB for existing event %s',
                 kwargs['text_event']
             )
-            e.is_finished = True
-            e.handler_call_end_datetime = _call_date
-            db_session.commit()
-            return
-        # else we have an event_end without a matching event_start
-        logger.info(
-            'Writing event_end to DB without matching started event '
-            '(text_event=%s)', kwargs['text_event']
-        )
-        _date = datetime.strptime(
-            kwargs['call_date'], '%Y-%m-%d %H:%M:%S'
-        )
-        e = MotionEvent(
-            text_event=kwargs['text_event'],
-            date=_date,
-            event_id=kwargs['event_id'],
-            frame_num=kwargs['frame_num'],
-            cam_num=kwargs['cam'],
-            cam_name=kwargs['cam_name'],
-            host=kwargs['host'],
-            changed_pixels=kwargs['changed_px'],
-            threshold=kwargs['threshold'],
-            despeckle_labels=kwargs['despeckle_labels'],
-            fps=kwargs['fps'],
-            noise=kwargs['noise'],
-            motion_width=kwargs['motion_width'],
-            motion_height=kwargs['motion_height'],
-            motion_center_x=kwargs['motion_center_x'],
-            motion_center_y=kwargs['motion_center_y'],
-            is_finished=True,
-            handler_call_end_datetime=_call_date
-        )
-        db_session.add(e)
+        e.is_finished = True
+        e.handler_call_end_datetime = _call_date
         if kwargs.get('debug_frame_info', None) is not None:
             self._handle_debug_frame_info(
                 kwargs['text_event'], kwargs['debug_frame_info']

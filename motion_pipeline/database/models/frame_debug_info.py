@@ -61,7 +61,9 @@ class FrameDebugInfo(Base, ModelAsDict):
     text_event = Column(String(255), ForeignKey('motion_events.text_event'))
 
     #: Relationship to the MotionEvent
-    event = relationship('MotionEvent', back_populates='video', uselist=False)
+    event = relationship(
+        'MotionEvent', back_populates='frame_debug_infos', uselist=False
+    )
 
     #: Time of the frame capture
     date = Column(DateTime)

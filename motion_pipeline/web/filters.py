@@ -55,3 +55,25 @@ def ago_filter(dt):
     if dt == '' or dt is None or isinstance(dt, Undefined):
         return ''
     return naturaltime(dtnow() - dt)
+
+
+@app.template_filter('motionpercent')
+def motionpercent_filter(image_w, image_h, motion_w, motion_h):
+    """
+    Given the dimensions of the full image and of the motion area, return the
+    percentage of the full image that the motion area makes up.
+
+    :param image_w: full image width
+    :type image_w: int
+    :param image_h: full image height
+    :type image_h: int
+    :param motion_w: motion area width
+    :type motion_w: int
+    :param motion_h: motion area height
+    :type motion_h: int
+    :return: percentage of image that motion area makes up
+    :rtype: float
+    """
+    img = image_w * image_h
+    motion = motion_w * motion_h
+    return (motion / img) * 100

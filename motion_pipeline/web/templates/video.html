@@ -40,7 +40,9 @@
           <td><strong>Date:</strong> {{ video.event.date }} to {{ video.date }} ({{ video.date - video.event.date }})</td>
         </tr>
         <tr>
-          <td><strong>Changed Pixels: </strong> {{ video.event.changed_pixels }}</td>
+          <td><strong>Changed Pixels: </strong> {{ video.event.changed_pixels }}
+            {% if video.event.frame_debug_infos|length > 0 %}<a href="#" onclick="$('#debuginfos').toggle();">toggle debug info</a>{% endif %}
+          </td>
           <td><strong>Threshold:</strong> {{ video.event.threshold }}</td>
           <td><strong>Motion Width x Height:</strong> {{ video.event.motion_width}} x {{ video.event.motion_height }}</td>
           <td><strong>Motion Center:</strong> X={{ video.event.motion_center_x }} Y={{ video.event.motion_center_y }}</td>
@@ -60,6 +62,39 @@
       <p class="vjs-no-js">To view this video please enable JavaScript, and consider upgrading to a web browser that <a href="http://videojs.com/html5-video-support/" target="_blank">supports HTML5 video</a></p>
     </video>
   </div>
+  {% if video.event.frame_debug_infos|length > 0 %}
+  <div id="debuginfos" align="center" style="display: none;">
+    <h2 style="text-align: left;">Frame Debug Info</h2>
+    <table>
+      <thead>
+      <tr>
+        <th>Date/Time.Frame</th>
+        <th>Changed / Threshold</th>
+        <th>Noise Level</th>
+        <th>Despeckle Labels</th>
+        <th>Image Size (WxH)</th>
+        <th>Motion Size (WxH)</th>
+        <th>Motion Percent</th>
+        <th>Motion Center (X, Y)</th>
+      </tr>
+      </thead>
+      <tbody>
+      {% for fdi in video.event.frame_debug_infos %}
+      <tr>
+        <td>{{ fdi.date }}.{{ fdi.frame_num }}</td>
+        <td>{{ fdi.changed_pixels}} / {{ fdi.threshold }}</td>
+        <td>{{ fdi.noise }}</td>
+        <td>{{ fdi.despeckle_labels }}</td>
+        <td>{{ fdi.image_width }} x {{ fdi.image_height }}</td>
+        <td>{{ fdi.motion_width }} x {{ fdi.motion_height }}</td>
+        <td>foo</td>
+        <td>{{ fdi.motion_center_x }}, {{ fdi.motion_center_y }}</td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
   <script src="https://vjs.zencdn.net/7.0.2/video.js"></script>
   <script>
   function divToFillRemaining() {

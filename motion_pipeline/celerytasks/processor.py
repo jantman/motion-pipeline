@@ -46,7 +46,7 @@ from PIL import Image
 
 import motion_pipeline.settings as settings
 from motion_pipeline.database.db import db_session, cleanup_db
-from motion_pipeline.database.models import Video, MotionEvent
+from motion_pipeline.database.models import Video, MotionEvent, FrameDebugInfo
 from motion_pipeline.handler_actions import FILE_UPLOAD_ACTIONS
 from motion_pipeline.utils import autoremoving_tempfile
 from motion_pipeline.s3connection import get_s3_bucket
@@ -166,7 +166,23 @@ class MotionTaskProcessor(object):
             handler_call_end_datetime=_call_date
         )
         db_session.add(e)
+        if kwargs.get('debug_frame_info', None) is not None:
+            self._handle_debug_frame_info(
+                kwargs['text_event'], kwargs['debug_frame_info']
+            )
         db_session.commit()
+
+    def _handle_debug_frame_info(self, text_event, infos):
+        for i in infos:
+            try:
+                i['text_event'] = text_event
+                d = i['date']
+                i['date'] = datetime.strptime(d, '%Y-%m-%d %H:%M:%S')
+                db_session.add(FrameDebugInfo(**i))
+            except Exception:
+                logger.error(
+                    'Malformed debug_frame_info entry: %s', i, exc_info=True
+                )
 
     def _handle_file_upload(self, **kwargs):
         logger.info(

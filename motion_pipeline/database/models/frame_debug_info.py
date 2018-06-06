@@ -37,7 +37,7 @@ Jason Antman <jason@jasonantman.com> <http://www.jasonantman.com>
 
 import logging
 from sqlalchemy import (
-    Column, Integer, String, DateTime, Boolean
+    Column, Integer, String, DateTime, ForeignKey, PrimaryKeyConstraint
 )
 from sqlalchemy.orm import relationship
 from motion_pipeline.database.models.base import Base, ModelAsDict
@@ -45,43 +45,29 @@ from motion_pipeline.database.models.base import Base, ModelAsDict
 logger = logging.getLogger(__name__)
 
 
-class MotionEvent(Base, ModelAsDict):
+class FrameDebugInfo(Base, ModelAsDict):
     """
-    Class that describes a motion detected event
+    Class that describes on_motion_detected debug info for a frame
     """
 
-    __tablename__ = 'motion_events'
+    __tablename__ = 'frame_debug_info'
     __table_args__ = (
+        PrimaryKeyConstraint('text_event', 'date', 'frame_num'),
         {'mysql_engine': 'InnoDB'}
     )
 
     #: The "text_event", a unique identifier for the event. This should be
     #: "%t-%Y%m%d%H%M%S-%q-%v"
-    text_event = Column(String(255), primary_key=True)
+    text_event = Column(String(255), ForeignKey('motion_events.text_event'))
 
-    #: date of the upload
+    #: Relationship to the MotionEvent
+    event = relationship('MotionEvent', back_populates='video', uselist=False)
+
+    #: Time of the frame capture
     date = Column(DateTime)
 
-    #: datetime when motion called motion_handler.py for on_event_start
-    handler_call_start_datetime = Column(DateTime)
-
-    #: datetime when motion called motion_handler.py for on_event_end
-    handler_call_end_datetime = Column(DateTime)
-
-    #: ID of the event; this resets every time motion restarts
-    event_id = Column(Integer)
-
-    #: The frame number
+    #: The frame number this record describes
     frame_num = Column(Integer)
-
-    #: The camera number
-    cam_num = Column(Integer)
-
-    #: The camera name
-    cam_name = Column(String(40))
-
-    #: The host that motion is running on
-    host = Column(String(40))
 
     #: The number of changed pixels
     changed_pixels = Column(Integer)
@@ -95,8 +81,11 @@ class MotionEvent(Base, ModelAsDict):
     #: The number of labels identified by despeckle
     despeckle_labels = Column(Integer)
 
-    #: The current FPS rate of the camera
-    fps = Column(Integer)
+    #: The width of the image in pixels
+    image_width = Column(Integer)
+
+    #: The height of the image in pixels
+    image_height = Column(Integer)
 
     #: The width of the motion area in pixels
     motion_width = Column(Integer)
@@ -109,12 +98,3 @@ class MotionEvent(Base, ModelAsDict):
 
     #: The Y center of the motion area
     motion_center_y = Column(Integer)
-
-    video = relationship('Video', back_populates='event', uselist=False)
-
-    frame_debug_infos = relationship(
-        'FrameDebugInfo', back_populates='event'
-    )
-
-    #: Whether or not the file has been viewed yet
-    is_finished = Column(Boolean, default=False)

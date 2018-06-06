@@ -39,3 +39,4 @@ from motion_pipeline.database.models.video import Video
 from motion_pipeline.database.models.motion_event import MotionEvent
 from motion_pipeline.database.models.dbsetting import DBSetting
 from motion_pipeline.database.models.notification import Notification
+from motion_pipeline.database.models.frame_debug_info import FrameDebugInfo

@@ -85,10 +85,7 @@ class MotionHandler(object):
     def run(self, action, args_dict):
         logger.debug('run() action=%s args=%s', action, args_dict)
         if action not in FILE_UPLOAD_ACTIONS:
-            logger.debug('Enqueueing Celery task...')
-            motion_ingest.delay(action, **args_dict)
-            logger.debug('No file upload; run finished.')
-            return
+            return self.enqueue_ingest(action, args_dict)
         logger.debug('Finding bucket')
         logger.debug('Got bucket')
         for attempt in range(0, settings.HANDLER_MAX_UPLOAD_ATTEMPTS):
@@ -107,6 +104,49 @@ class MotionHandler(object):
                 time.sleep(5)
         else:
             raise RuntimeError('ERROR: All upload attempts failed.')
+
+    def enqueue_ingest(self, action, args_dict):
+        debug_file = os.path.join(
+            settings.MOTION_SAVE_DIR,
+            '%s.on_motion_detected.txt' % args_dict['text_event']
+        )
+        if action == 'event_end' and os.path.exists(debug_file):
+            args_dict['debug_frame_info'] = self._read_debug_file(debug_file)
+        logger.debug('Enqueueing Celery task...')
+        motion_ingest.delay(action, **args_dict)
+        if os.path.exists(debug_file):
+            logger.debug('Removing debug file: %s', debug_file)
+            os.unlink(debug_file)
+        logger.debug('No file upload; run finished.')
+
+    def _read_debug_file(self, fpath):
+        if not os.path.exists(fpath):
+            return []
+        res = []
+        with open(fpath, 'r') as fh:
+            for line in fh.readlines():
+                line = line.strip()
+                if line == '':
+                    continue
+                parts = line.split()
+                data = {k: v for k, v in (s.split('=') for s in parts)}
+                res.append({
+                    'date': '%s-%s-%s %s' % (
+                        data['year'], data['month'], data['day'], data['time']
+                    ),
+                    'frame_num': int(data['frame']),
+                    'changed_pixels': int(data['changed']),
+                    'threshold': int(data['threshold']),
+                    'noise': int(data['noise']),
+                    'despeckle_labels': int(data['labels']),
+                    'image_width': int(data['imgw']),
+                    'image_height': int(data['imgh']),
+                    'motion_width': int(data['motionw']),
+                    'motion_height': int(data['motionh']),
+                    'motion_center_x': int(data['motionx']),
+                    'motion_center_y': int(data['motiony'])
+                })
+        return res
 
     def upload_file(self, args):
         assert args['filename'] is not None

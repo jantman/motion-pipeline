@@ -119,6 +119,8 @@ def purge_archived_from_db():
             continue
         db_session.delete(video)
         db_session.delete(video.event)
+        for fdi in video.event.frame_debug_infos:
+            db_session.delete(fdi)
         db_session.commit()
 
 

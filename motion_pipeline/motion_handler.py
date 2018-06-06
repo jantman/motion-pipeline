@@ -114,7 +114,7 @@ class MotionHandler(object):
             args_dict['debug_frame_info'] = self._read_debug_file(debug_file)
         logger.debug('Enqueueing Celery task...')
         motion_ingest.delay(action, **args_dict)
-        if os.path.exists(debug_file):
+        if action == 'event_end' and os.path.exists(debug_file):
             logger.debug('Removing debug file: %s', debug_file)
             os.unlink(debug_file)
         logger.debug('No file upload; run finished.')

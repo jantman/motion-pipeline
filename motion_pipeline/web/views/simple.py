@@ -45,7 +45,9 @@ from sqlalchemy import asc, func
 from motion_pipeline.web.app import app
 from motion_pipeline.web.utils import proxy_aware_redirect
 from motion_pipeline.database.db import db_session
-from motion_pipeline.database.models import Video, MotionEvent, Notification
+from motion_pipeline.database.models import (
+    Video, MotionEvent, Notification, EventDispositionEnum
+)
 from motion_pipeline.database.dbsettings import get_db_setting
 from motion_pipeline import settings
 
@@ -101,7 +103,10 @@ class SimpleLiveView(MethodView):
         }
         cams = cams_dict()
         for camname in cams.keys():
-            logger.info('cam %s latest_event: %s', camname, cams[camname]['latest_event'])
+            logger.info(
+                'cam %s latest_event: %s',
+                camname, cams[camname]['latest_event']
+            )
         return render_template(
             'live.html', unseen_count=sum(unseen_counts.values()),
             new_video_counts=unseen_counts, cameras=cams,
@@ -116,22 +121,40 @@ class SimpleVideosView(MethodView):
     """
 
     def get(self):
-        events = db_session.query(
-            MotionEvent
-        ).filter(
+        filters = [
             MotionEvent.video.has(is_archived=False),
             MotionEvent.video.__ne__(None)
-        ).order_by(asc(MotionEvent.date)).all()
+        ]
+        dispo = None
+        if 'dispo' in request.args:
+            dispo = request.args['dispo']
+            if dispo == 'none':
+                filters.append(
+                    MotionEvent.disposition.__eq__(None)
+                )
+            else:
+                filters.append(
+                    MotionEvent.disposition.__eq__(
+                        EventDispositionEnum[dispo]
+                    )
+                )
+        events = db_session.query(
+            MotionEvent
+        ).filter(*filters).order_by(asc(MotionEvent.date)).all()
         unseen_count = db_session.query(
             Video.filename
         ).filter(
             Video.is_archived.__eq__(False)
         ).count()
         cams = cams_dict()
+        return_to = '/simple/videos'
+        if dispo is not None:
+            return_to += '?dispo=%s' % dispo
         return render_template(
             'videos.html', events=events, unseen_count=unseen_count,
             cameras=cams, cam_names=sorted(settings.CAMERAS.keys()),
-            notifications_enabled=get_db_setting('notifications', True)
+            notifications_enabled=get_db_setting('notifications', True),
+            dispo_enum=EventDispositionEnum, dispo=dispo, return_to=return_to
         )
 
 
@@ -144,10 +167,12 @@ class SimpleOneVideoView(MethodView):
     def get(self, video_filename):
         file = db_session.query(Video).get(video_filename)
         cams = cams_dict()
+        return_to = request.args.get('return_to', '/simple/videos')
         return render_template(
             'video.html', video=file, cameras=cams,
             cam_names=sorted(settings.CAMERAS.keys()),
-            notifications_enabled=get_db_setting('notifications', True)
+            notifications_enabled=get_db_setting('notifications', True),
+            return_to=return_to
         )
 
 
@@ -166,12 +191,36 @@ class ArchiveView(MethodView):
     """
 
     def get(self, path):
+        return_to = request.args.get('return_to', '/simple/videos')
         upload = db_session.query(Video).get(path)
         assert upload is not None
         logger.info('Archiving: %s', path)
         upload.is_archived = True
         db_session.commit()
-        return proxy_aware_redirect('/simple/videos', code=302)
+        return proxy_aware_redirect(return_to, code=302)
+
+
+class SetDispositionHandler(MethodView):
+    """
+    Set the disposition on an event
+    """
+
+    def post(self, text_event):
+        event = db_session.query(MotionEvent).get(text_event)
+        assert event is not None
+        m = request.get_json()
+        if m is None:
+            m = request.get_data()
+        logger.info(
+            'Setting disposition of event %s to: %s',
+            text_event, m['disposition']
+        )
+        if m['disposition'] == 'none':
+            event.disposition = None
+        else:
+            event.disposition = EventDispositionEnum[m['disposition']]
+        db_session.commit()
+        return 'OK'
 
 
 class NotificationRedirect(MethodView):
@@ -226,6 +275,10 @@ app.add_url_rule(
 )
 app.add_url_rule(
     '/simple/archive/<path:path>.htm', view_func=ArchiveView.as_view('archive_view')
+)
+app.add_url_rule(
+    '/simple/setDisposition/<path:text_event>.htm',
+    view_func=SetDispositionHandler.as_view('set_disposition_view')
 )
 app.add_url_rule(
     '/simple/clientlog', view_func=ClientLog.as_view('client_log')

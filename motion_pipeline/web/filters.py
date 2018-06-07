@@ -40,6 +40,7 @@ from humanize import naturaltime
 
 from motion_pipeline.utils import dtnow
 from motion_pipeline.web.app import app
+from motion_pipeline.database.models import EventDispositionEnum
 
 
 @app.template_filter('ago')
@@ -77,3 +78,18 @@ def motionpercent_filter(image_w, image_h, motion_w, motion_h):
     img = image_w * image_h
     motion = motion_w * motion_h
     return (motion / img) * 100
+
+
+@app.template_filter('dispositionlinks')
+def dispositionlinks_filter(event):
+    s = ''
+    dispos = {k: k.name for k in EventDispositionEnum}
+    dispos[None] = 'none'
+    for k in dispos:
+        if event.disposition == k:
+            s += '<strong>%s</strong> ' % dispos[k]
+        else:
+            s += '<a href="#" onclick="setDisposition(text_event, \'%s\')">%s</a> ' % (
+                dispos[k], dispos[k]
+            )
+    return s

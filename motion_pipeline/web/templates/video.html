@@ -15,14 +15,18 @@
   <script src="/static/js/motionapi.js"></script>
   <script src="/static/js/common.js"></script>
   <script src="/static/js/notifications.js"></script>
+  <script>
+    var text_event = "{{ video.text_event }}";
+  </script>
 </head>
 <body>
   <div id="navheader">
-    <a href="/simple/">Index</a> - <a href="/simple/live">Live</a> - <a href="/simple/videos">Back to Videos</a>
+    <a href="/simple/">Index</a> - <a href="/simple/live">Live</a> - <a href="{{ return_to }}">Back to Videos</a>
+    - Disposition {{ video.event|dispositionlinks|safe }}
     {% if video.is_archived %}
       - <strong>Archived</strong>
     {% else %}
-    - <a href="/simple/archive/{{ video.filename }}.htm"><button id="archive">Archive</button></a>
+    - <a href="/simple/archive/{{ video.filename }}.htm?return_to={{ return_to|urlencode }}"><button id="archive">Archive</button></a>
     {% endif %}
     {% for cam_name in cam_names %}
     - {{ cam_name }} <span id="detection_status_{{ cam_name }}" class="detection unknown">n/a</span>
@@ -107,6 +111,26 @@
     } else {
         player.width(w);
     }
+  }
+  function setDisposition(event, dispo) {
+    $.ajax({
+        url: '/simple/setDisposition/' + event + '.htm',
+        method: 'POST',
+        data: JSON.stringify({'disposition': dispo}),
+        contentType: "application/json; charset=utf-8",
+        success: function(data) {
+            if(data == 'OK') {
+                location.reload();
+            } else {
+                console.log('setDisposition() error: %s', data);
+                alert('ERROR: setDisposition() failed; see console log for details (and change this to a modal!)');
+            }
+        },
+        error: function(jqXHR, textStatus, errorThrown) {
+            console.log('setDisposition() error: %s (%s)', textStatus, errorThrown);
+            alert('ERROR: setDisposition() failed; see console log for details (and change this to a modal!)');
+        }
+    });
   }
   $( document ).ready(function() {
       loadDetectionStatus();

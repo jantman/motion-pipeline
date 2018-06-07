@@ -8,7 +8,8 @@
                       ERROR: No video for {{ event.video.filename }}
                       {% endif %}
                   {% else %}
-                      <a href="/simple/videos/{{ event.video.filename }}.htm">
+                      <a name="{{ event.video.filename }}"></a>
+                      <a href="/simple/videos/{{ event.video.filename }}.htm?return_to={{ return_to|urlencode }}">
                       {% if event.video is none or event.video.thumbnail_name is none %}
                       {% set imgloc = "/static/640x480.png" %}
                       {% else %}
@@ -17,6 +18,7 @@
                       <img src="{{ imgloc }}" width="320" height="240" /><br />
                       {{ event.video.filename }}
                       </a>
+                      {% if event.disposition is not none %}<br /><strong>{{ event.disposition.name }}</strong>{% endif %}
                   {% endif %}
               </td>
               <td>{{ event.video.length_sec }}</td>
@@ -35,7 +37,7 @@
                   frame={{ event.frame_num }}<br />
                   host={{ event.host }}
               </td>
-              <td><a href="/simple/archive/{{ event.video.filename }}.htm">Archive</a></td>
+              <td><a href="/simple/archive/{{ event.video.filename }}.htm?return_to={{ return_to|urlencode }}">Archive</a></td>
           </tr>
 {%- endmacro %}
 <html>
@@ -72,7 +74,30 @@
     {% endfor %}
     - notifications: <span id="notificationStatus" class="notifications unknown">unknown</span>
   </div>
+  {% if dispo is none %}
   <h2>{{ unseen_count }} New Videos</h2>
+  {% else %}
+  <h2>{{ unseen_count }} New Videos (filtered to {{ events|length}})</h2>
+  {% endif %}
+  <p><strong>Show only disposition: </strong>
+      {% if dispo is none %}
+      <strong>ALL</strong>
+      {% else %}
+      <a href="/simple/videos">ALL</a>
+      {% endif %}
+      {% if dispo == 'none' %}
+      <strong>None</strong>
+      {% else %}
+      <a href="/simple/videos?dispo=none">None</a>
+      {% endif %}
+      {% for d in dispo_enum %}
+      {% if dispo == d.name %}
+      <strong>{{ d.name }}</strong>
+      {% else %}
+      <a href="/simple/videos?dispo={{ d.name }}">{{ d.name }}</a>
+      {% endif %}
+      {% endfor %}
+  </p>
   <table>
       <thead>
           <tr>

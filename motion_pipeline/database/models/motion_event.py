@@ -37,12 +37,23 @@ Jason Antman <jason@jasonantman.com> <http://www.jasonantman.com>
 
 import logging
 from sqlalchemy import (
-    Column, Integer, String, DateTime, Boolean
+    Column, Integer, String, DateTime, Boolean, Enum
 )
 from sqlalchemy.orm import relationship
+import enum
 from motion_pipeline.database.models.base import Base, ModelAsDict
 
 logger = logging.getLogger(__name__)
+
+
+class EventDispositionEnum(enum.Enum):
+    """
+    Class for saving the disposition of an event.
+    """
+
+    false_positive = 1
+    needs_review = 2
+    valid_event = 3
 
 
 class MotionEvent(Base, ModelAsDict):
@@ -118,3 +129,6 @@ class MotionEvent(Base, ModelAsDict):
 
     #: Whether or not the file has been viewed yet
     is_finished = Column(Boolean, default=False)
+
+    #: Event Disposition, using EventDispositionEnum
+    disposition = Column(Enum(EventDispositionEnum))

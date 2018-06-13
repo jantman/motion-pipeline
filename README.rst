@@ -1,13 +1,13 @@
-motion-pipeline
-===============
+motion-pipeline (ABANDONED)
+===========================
 
 .. image:: https://img.shields.io/pypi/v/python-package-skeleton.svg?maxAge=2592000
    :target: https://pypi.python.org/pypi/python-package-skeleton
    :alt: pypi version
 
-.. image:: http://www.repostatus.org/badges/latest/wip.svg
-   :alt: Project Status: WIP – Initial development is in progress, but there has not yet been a stable, usable release suitable for the public.
-   :target: http://www.repostatus.org/#wip
+.. image:: http://www.repostatus.org/badges/latest/abandoned.svg
+   :alt: Project Status: Abandoned – Initial development has started, but there has not yet been a stable, usable release; the project has been abandoned and the author(s) do not intend on continuing development.
+   :target: http://www.repostatus.org/#abandoned
 
 Frontend and recording management pipeline for the Motion video motion detection project.
 
@@ -16,7 +16,9 @@ Frontend and recording management pipeline for the Motion video motion detection
 Status
 ------
 
-This project is **alpha** code, and is a **work in progress that may not be finished.** I am going to be doing as much as I can on this in three weeks; I'm not sure if I'll continue work on it after that. You've been warned. Sorry.
+This project is abandoned. I got it working in a very basic sense - it's able to handle events from ``motion`` (motion detection and new movies), display the movies in the very simplistic web UI, extract the first frame, and send a summary notification (with the first frame image) via Pushover. It also has support for archiving/deleting events and some basic classification of them.
+
+Unfortunately I moved last week, and the motion detection logic in ``motion`` can't handle all of the moving shadows from trees on my property. ZoneMinder, which takes color information into account, can handle it much better. So I've abandoned this in favor of ZoneMinder. I'm leaving the code here in case it's of use to anyone.
 
 Introduction
 ------------

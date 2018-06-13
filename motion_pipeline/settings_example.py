@@ -63,7 +63,7 @@ HANDLER_LOG_DEBUG = False
 HANDLER_MAX_UPLOAD_ATTEMPTS = 4
 
 ##############################
-# Camera settings #
+# Camera settings for web UI #
 ##############################
 
 CAM_USER = 'MyUser'
@@ -107,5 +107,6 @@ CAMERAS = {
 }
 
 # For development of the live view, uncommenting these makes it easier...
+# They replace the live MJPEG feeds with a static placeholder image
 # CAMERAS['CAM1']['mjpeg_url'] = '/static/640x480.png'
 # CAMERAS['CAM2']['mjpeg_url'] = '/static/640x480.png'
